@@ -329,6 +329,81 @@
   3. 用户测试页面显示问题是否已解决
 - **项目状态**: 数据导入功能完整实现，系统支持批量错题数据导入。后端API覆盖错题管理、AI分析、数据导入三大核心功能。
 
+## 会话 2025-12-16 01:00
+- **用户报告问题**: 前端页面已能正常显示（Alert组件修复成功），但出现API连接错误：
+  - CORS错误：前端尝试连接 http://localhost:8000/api/mistakes（旧端口）
+  - 连接被拒绝：端口不匹配导致无法访问后端
+- **问题诊断**: 前端多个配置文件仍指向旧端口8000，后端运行在8002端口
+- **修复措施**:
+  1. **前端API配置统一**:
+     - api.ts: API_BASE_URL从8000改为8002
+     - .env.development: 更新环境变量
+     - .env.example: 更新示例配置
+     - vite.config.ts: 更新代理目标端口
+  2. **后端CORS增强**: 添加localhost:8002到允许来源列表
+  3. **连接验证**: 创建test_connection.py验证后端所有API端点正常响应
+- **测试结果**:
+  - 后端服务器运行正常（端口8002）
+  - 所有核心API端点响应200 OK
+  - 数据导入API测试通过
+- **下一步操作**:
+  1. 用户需重启前端开发服务器：`cd frontend && npm run dev`
+  2. 浏览器硬刷新（Ctrl+F5）清除缓存
+  3. 验证页面功能是否恢复正常
+- **项目状态**: API连接配置问题已修复，系统具备完整的前后端通信基础。页面显示问题已解决（Alert组件修复），仅剩网络配置同步。
+
+--- 签名 ---
+Rookie & 艾可希雅
+GitHub: error-T-T
+邮箱: RookieT@e.gzhu.edu.cn
+
+## 会话 2025-12-16 (修复API响应格式不匹配问题)
+
+**已验证功能**: 前端API调用期望分页响应格式，后端API正在运行（端口8003）
+**修复问题**: API响应格式不匹配问题，特别是错题列表分页响应和统计响应格式
+
+**详细修复内容**:
+
+1. **错题列表端点 (`GET /api/mistakes`)**:
+   - 将响应模型从 `List[MistakeResponse]` 改为 `PaginatedResponse[MistakeResponse]`
+   - 添加分页元数据计算：总记录数、总页数、当前页码、每页大小
+   - 兼容前端参数映射：
+     - `knowledge_tag` → `tags` 参数转换
+     - `question_type` 参数支持
+     - `search` 和 `keyword` 参数兼容处理
+   - 响应格式现在包含：`items`, `total`, `page`, `page_size`, `total_pages`
+
+2. **统计摘要端点 (`GET /api/mistakes/stats/summary`)**:
+   - 添加响应模型 `StatsResponse` 声明
+   - 确保返回字段与前端期望一致：
+     - `total_mistakes`, `mistakes_by_type`, `mistakes_by_difficulty`
+     - `top_knowledge_gaps`, `accuracy_trend`
+
+3. **数据管理器搜索方法**:
+   - 扩展 `search_mistakes` 方法支持 `question_type` 参数
+   - 保持向后兼容性
+
+**测试验证**:
+- 错题列表端点返回正确的分页结构（字典类型，包含分页元数据）
+- 统计端点返回正确的统计字段结构
+- 参数映射测试通过：`knowledge_tag`、`tags`、`question_type`、`search`
+
+**前端适配状态**:
+- 前端 `api.ts` 已期望 `PaginatedResponse<MistakeResponse>` 类型
+- `MistakesPage.tsx` 已正确使用 `response.items`、`response.total`、`response.total_pages`
+- 无需修改前端代码，前后端格式现已一致
+
+**项目状态**:
+- 核心API响应格式不匹配问题已解决
+- 前后端数据流恢复正常
+- 分页、筛选、统计功能应能正常工作
+- 基础功能冒烟测试（test-001）的API验证部分应能通过
+
+**下一步建议**:
+1. 重启前端开发服务器测试完整功能流程
+2. 考虑将 test-001 "基础功能冒烟测试" 标记为通过
+3. 继续实现下一个高优先级功能：be-003 "错题分析API（AI集成）"
+
 --- 签名 ---
 Rookie & 艾可希雅
 GitHub: error-T-T

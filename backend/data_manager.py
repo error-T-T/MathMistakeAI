@@ -11,7 +11,7 @@ import pandas as pd
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import uuid
-from data_models import MistakeCreate, MistakeResponse, MistakeUpdate, DifficultyLevel, QuestionType
+from data_models import MistakeCreate, MistakeResponse, MistakeUpdate, DifficultyLevel, QuestionType, AnalysisResponse
 
 def safe_safe_print(text: str):
     """安全打印函数，处理Windows控制台编码问题"""
@@ -50,7 +50,8 @@ class CSVDataManager:
                 writer.writerow([
                     'id', 'question_content', 'wrong_process', 'wrong_answer',
                     'correct_answer', 'question_type', 'knowledge_tags',
-                    'difficulty', 'source', 'notes', 'created_at', 'updated_at'
+                    'difficulty', 'source', 'notes', 'created_at', 'updated_at',
+                    'analysis_result'
                 ])
             safe_print(f"[FILE] 创建了新的数据文件: {self.file_path}")
 
@@ -73,7 +74,8 @@ class CSVDataManager:
             mistake.source or '',
             mistake.notes or '',
             created_at,
-            updated_at
+            updated_at,
+            ''  # analysis_result 初始为空
         ]
 
         # 写入CSV
@@ -187,8 +189,44 @@ class CSVDataManager:
             safe_print(f"[ERROR] 删除错题失败: {e}")
             return False
 
+    def update_mistake_analysis(self, mistake_id: str, analysis: AnalysisResponse) -> bool:
+        """更新错题的分析结果"""
+        try:
+            df = pd.read_csv(self.file_path)
+
+            if mistake_id not in df['id'].values:
+                return False
+
+            idx = df[df['id'] == mistake_id].index[0]
+
+            # 将分析结果转换为JSON字符串
+            analysis_dict = {
+                "mistake_id": analysis.mistake_id,
+                "error_type": analysis.error_type,
+                "root_cause": analysis.root_cause,
+                "knowledge_gap": analysis.knowledge_gap,
+                "learning_suggestions": analysis.learning_suggestions,
+                "similar_examples": analysis.similar_examples,
+                "confidence_score": analysis.confidence_score
+            }
+            analysis_json = json.dumps(analysis_dict, ensure_ascii=False)
+
+            # 更新分析结果字段
+            df.at[idx, 'analysis_result'] = analysis_json
+            # 更新更新时间
+            df.at[idx, 'updated_at'] = datetime.now().isoformat()
+
+            # 保存回CSV
+            df.to_csv(self.file_path, index=False)
+
+            safe_print(f"[OK] 更新了错题分析结果: {mistake_id}")
+            return True
+        except Exception as e:
+            safe_print(f"[ERROR] 更新错题分析结果失败: {e}")
+            return False
+
     def search_mistakes(self, keyword: str = None, tags: List[str] = None,
-                        difficulty: DifficultyLevel = None) -> List[MistakeResponse]:
+                        difficulty: DifficultyLevel = None, question_type: QuestionType = None) -> List[MistakeResponse]:
         """搜索错题记录"""
         try:
             df = pd.read_csv(self.file_path)
@@ -211,6 +249,9 @@ class CSVDataManager:
 
             if difficulty:
                 df = df[df['difficulty'] == difficulty.value]
+
+            if question_type:
+                df = df[df['question_type'] == question_type.value]
 
             # 转换为响应对象
             mistakes = []
@@ -273,6 +314,15 @@ class CSVDataManager:
             else:
                 tags = [tag.strip() for tag in str(tags_str).split(',') if tag.strip()]
 
+            # 解析分析结果（JSON字符串）
+            analysis_result = None
+            if 'analysis_result' in row and pd.notna(row['analysis_result']) and row['analysis_result'].strip():
+                try:
+                    analysis_result = json.loads(row['analysis_result'])
+                except json.JSONDecodeError:
+                    safe_print(f"[WARN] 无法解析analysis_result JSON: {row['analysis_result'][:50]}...")
+                    analysis_result = None
+
             return MistakeResponse(
                 id=row['id'],
                 question_content=row['question_content'],
@@ -285,7 +335,8 @@ class CSVDataManager:
                 source=row['source'] if pd.notna(row['source']) else None,
                 notes=row['notes'] if pd.notna(row['notes']) else None,
                 created_at=datetime.fromisoformat(row['created_at']),
-                updated_at=datetime.fromisoformat(row['updated_at'])
+                updated_at=datetime.fromisoformat(row['updated_at']),
+                analysis_result=analysis_result
             )
         except Exception as e:
             safe_print(f"[ERROR] 转换错题数据失败: {e}")

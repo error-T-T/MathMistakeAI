@@ -5,15 +5,73 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MathMistakeAI - 数学错题智能分析系统</title>
-    <!-- KaTeX CSS for math rendering -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
-    <!-- Inter font -->
+    
+    <!-- KaTeX CSS for math rendering - 使用本地代理避免 CORS -->
+    <link 
+      rel="stylesheet" 
+      href="/katex-css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    >
+    
+    <!-- Inter font - 使用本地代理避免 CORS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link 
+      href="/fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" 
+      rel="stylesheet"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    >
+    
+    <!-- 备选方案：如果代理不工作，使用本地字体 -->
+    <style>
+      /* 预加载备用字体 */
+      @font-face {
+        font-family: 'Inter Fallback';
+        font-style: normal;
+        font-weight: 300;
+        font-display: swap;
+        src: local('Arial');
+      }
+      @font-face {
+        font-family: 'JetBrains Mono Fallback';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: local('Courier New');
+      }
+      body {
+        font-family: 'Inter', 'Inter Fallback', system-ui, -apple-system, sans-serif;
+      }
+      code, pre {
+        font-family: 'JetBrains Mono', 'JetBrains Mono Fallback', monospace;
+      }
+    </style>
   </head>
   <body class="bg-gray-50 dark:bg-midnight-950 text-gray-900 dark:text-gray-100 font-sans antialiased min-h-screen">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- 备选方案：如果 KaTeX 代理失败，尝试从本地加载 -->
+    <script>
+      // 检测 KaTeX CSS 是否加载成功
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+          // 检查是否有 KaTeX 相关的元素
+          const hasKatex = document.querySelector('.katex, .katex-display');
+          if (!hasKatex && document.querySelector('link[href="/katex-css"]')) {
+            console.warn('KaTeX CSS may not have loaded properly. Trying fallback...');
+            
+            // 尝试从本地加载 KaTeX
+            const fallbackLink = document.createElement('link');
+            fallbackLink.rel = 'stylesheet';
+            fallbackLink.href = 'https://unpkg.com/katex@0.16.9/dist/katex.min.css';
+            fallbackLink.crossOrigin = 'anonymous';
+            document.head.appendChild(fallbackLink);
+          }
+        }, 2000);
+      });
+    </script>
   </body>
 </html>

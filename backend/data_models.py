@@ -6,7 +6,7 @@ GitHub ID: error-T-T
 """
 
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Generic, TypeVar
 from datetime import datetime
 from enum import Enum
 
@@ -94,3 +94,15 @@ class StatsResponse(BaseModel):
     mistakes_by_difficulty: Dict[str, int] = Field(..., description="按难度统计")
     top_knowledge_gaps: List[str] = Field(..., description="高频知识漏洞")
     accuracy_trend: List[float] = Field(..., description="正确率趋势")
+
+
+# 泛型类型变量
+T = TypeVar('T')
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    """分页响应模型"""
+    items: List[T] = Field(..., description="当前页数据项")
+    total: int = Field(..., description="总记录数")
+    page: int = Field(..., description="当前页码")
+    page_size: int = Field(..., description="每页记录数")
+    total_pages: int = Field(..., description="总页数")

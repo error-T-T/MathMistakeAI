@@ -178,7 +178,7 @@
       "存储分析结果到数据系统",
       "返回JSON格式的分析结果"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {

@@ -132,7 +132,7 @@ class AIEngine:
     def analyze_mistake(self, request: AnalysisRequest) -> AnalysisResponse:
         """分析错题（真实AI分析）"""
         if self.fallback_mode or not self.is_connected:
-            print("⚠️  AI服务未连接，使用模拟分析")
+            safe_print("⚠️  AI服务未连接，使用模拟分析")
             return self._generate_mock_analysis(request)
 
         try:
@@ -176,7 +176,7 @@ class AIEngine:
                 }
             }
 
-            print(f"📊 发送AI分析请求，错题ID: {request.mistake_id}")
+            safe_print(f"📊 发送AI分析请求，错题ID: {request.mistake_id}")
 
             # 发送请求到Ollama
             response = self.client.post(
