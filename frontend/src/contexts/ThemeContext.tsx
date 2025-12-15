@@ -39,6 +39,13 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     // 添加当前主题类
     root.classList.add(theme)
 
+    // 对于tech-blue主题，同时添加dark类以激活Tailwind的dark:变体
+    if (theme === 'tech-blue' || theme === 'dark') {
+      root.classList.add('dark')
+    } else {
+      root.classList.remove('dark')
+    }
+
     // 根据主题设置data-theme属性
     root.setAttribute('data-theme', theme)
   }, [theme])
