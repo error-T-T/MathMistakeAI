@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MathMistakeAI - 数学错题智能分析系统</title>
     
-    <!-- KaTeX CSS for math rendering - 使用本地代理避免 CORS -->
-    <link 
-      rel="stylesheet" 
-      href="/katex-css"
+    <!-- KaTeX CSS for math rendering - 直接使用CDN -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     >
@@ -53,17 +53,19 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- 备选方案：如果 KaTeX 代理失败，尝试从本地加载 -->
+    <!-- 备选方案：如果 KaTeX CDN 失败，尝试备用 CDN -->
     <script>
       // 检测 KaTeX CSS 是否加载成功
       document.addEventListener('DOMContentLoaded', function() {
         setTimeout(function() {
           // 检查是否有 KaTeX 相关的元素
           const hasKatex = document.querySelector('.katex, .katex-display');
-          if (!hasKatex && document.querySelector('link[href="/katex-css"]')) {
+          const katexLink = document.querySelector('link[href*="katex"]');
+
+          if (!hasKatex && katexLink) {
             console.warn('KaTeX CSS may not have loaded properly. Trying fallback...');
-            
-            // 尝试从本地加载 KaTeX
+
+            // 尝试备用 CDN
             const fallbackLink = document.createElement('link');
             fallbackLink.rel = 'stylesheet';
             fallbackLink.href = 'https://unpkg.com/katex@0.16.9/dist/katex.min.css';

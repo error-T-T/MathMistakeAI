@@ -38,35 +38,80 @@ const MistakesPage = () => {
   // 标签列表（从错题中提取）
   const [availableTags, setAvailableTags] = useState<string[]>([])
 
-  // 在你的 MistakesPage.tsx 中修改 fetchMistakes 函数
+  // 搜索处理函数
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentPage(1);
+    fetchMistakes();
+  };
+
+  // 获取错题列表
   const fetchMistakes = async () => {
     try {
-      const response = await getMistakes(userId);
-      console.log('错题列表API响应:', response); // 添加这行查看响应结构
-    
-      // 根据实际API响应调整
+      setLoading(true);
+      setError(null);
+
+      const params = {
+        page: currentPage,
+        page_size: pageSize,
+        search: searchQuery || undefined,
+        question_type: selectedType !== 'all' ? selectedType : undefined,
+        difficulty: selectedDifficulty !== 'all' ? selectedDifficulty : undefined,
+        knowledge_tag: selectedTag || undefined,
+      };
+
+      const response = await mistakesApi.getMistakes(params);
+
       if (response && response.items && Array.isArray(response.items)) {
-        // 如果API返回 { items: [...] }
         setMistakes(response.items);
-      }else if (response && response.data && Array.isArray(response.data)) {
-        // 如果API返回 { data: [...] }
-        setMistakes(response.data);
-      } else if (Array.isArray(response)) {
-        // 如果API直接返回数组
-        setMistakes(response);
+        setTotalItems(response.total || 0);
+        setTotalPages(response.total_pages || 1);
+
+        // 提取标签
+        const tags = new Set<string>();
+        response.items.forEach(mistake => {
+          mistake.knowledge_tags.forEach(tag => tags.add(tag));
+        });
+        setAvailableTags(Array.from(tags));
       } else {
         console.error('Unexpected response format:', response);
-        setMistakes([]); // 设置为空数组而不是 undefined
+        setMistakes([]);
+        setTotalItems(0);
+        setTotalPages(1);
       }
     } catch (error) {
       console.error('获取错题列表失败:', error);
-      setMistakes([]); // 确保设置为空数组
+      setError('获取错题列表失败，请稍后重试');
+      setMistakes([]);
+      setTotalItems(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
   };
 
-// 注意：mistakes状态已在第17行声明，这里不需要重复声明
+  // 删除错题
+  const handleDelete = async () => {
+    if (!mistakeToDelete) return;
+
+    try {
+      setDeleting(true);
+      await mistakesApi.deleteMistake(mistakeToDelete);
+      setDeleteDialogOpen(false);
+      setMistakeToDelete(null);
+      fetchMistakes(); // 刷新列表
+    } catch (error) {
+      console.error('删除错题失败:', error);
+      setError('删除错题失败，请稍后重试');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // 初始化加载
+  useEffect(() => {
+    fetchMistakes();
+  }, [currentPage]);
 
   // 打开删除确认对话框
   const openDeleteDialog = (id: string) => {
