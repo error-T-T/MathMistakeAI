@@ -94,7 +94,7 @@
       "创建错题详情模态框/页面",
       "支持错题的编辑和删除"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {

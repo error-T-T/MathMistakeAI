@@ -1,10 +1,458 @@
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { Search, Filter, Edit, Trash2, Eye, Plus, Loader2, AlertCircle } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { mistakesApi } from '../services/api'
+import { DifficultyLevel, QuestionType, MistakeResponse, PaginationParams } from '../types'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import { Badge } from '../components/ui/Badge'
+import { Alert } from '../components/ui/Alert'
+import { Dialog } from '../components/ui/Dialog'
+import { Skeleton } from '../components/ui/Skeleton'
+
 const MistakesPage = () => {
+  // 状态管理
+  const [mistakes, setMistakes] = useState<MistakeResponse[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // 搜索和筛选状态
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedType, setSelectedType] = useState<QuestionType | 'all'>('all')
+  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | 'all'>('all')
+  const [selectedTag, setSelectedTag] = useState<string>('')
+
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const pageSize = 12
+
+  // 删除确认对话框
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [mistakeToDelete, setMistakeToDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  // 标签列表（从错题中提取）
+  const [availableTags, setAvailableTags] = useState<string[]>([])
+
+  // 获取错题列表
+  const fetchMistakes = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const params: PaginationParams = {
+        page: currentPage,
+        page_size: pageSize,
+        search: searchQuery || undefined,
+        question_type: selectedType !== 'all' ? selectedType : undefined,
+        difficulty: selectedDifficulty !== 'all' ? selectedDifficulty : undefined,
+        knowledge_tag: selectedTag || undefined,
+      }
+
+      const response = await mistakesApi.getMistakes(params)
+      setMistakes(response.items)
+      setTotalItems(response.total)
+      setTotalPages(response.total_pages)
+
+      // 提取唯一的标签
+      const tags = new Set<string>()
+      response.items.forEach(mistake => {
+        mistake.knowledge_tags.forEach(tag => tags.add(tag))
+      })
+      setAvailableTags(Array.from(tags))
+
+    } catch (err: any) {
+      setError(err.message || '获取错题列表失败')
+      console.error('获取错题列表失败:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 初始加载和筛选条件变化时重新获取
+  useEffect(() => {
+    fetchMistakes()
+  }, [currentPage, searchQuery, selectedType, selectedDifficulty, selectedTag])
+
+  // 处理搜索
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    setCurrentPage(1) // 重置到第一页
+    fetchMistakes()
+  }
+
+  // 处理删除错题
+  const handleDelete = async () => {
+    if (!mistakeToDelete) return
+
+    try {
+      setDeleting(true)
+      await mistakesApi.deleteMistake(mistakeToDelete)
+
+      // 从列表中移除已删除的错题
+      setMistakes(prev => prev.filter(m => m.id !== mistakeToDelete))
+      setDeleteDialogOpen(false)
+      setMistakeToDelete(null)
+
+    } catch (err: any) {
+      setError(err.message || '删除错题失败')
+      console.error('删除错题失败:', err)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  // 打开删除确认对话框
+  const openDeleteDialog = (id: string) => {
+    setMistakeToDelete(id)
+    setDeleteDialogOpen(true)
+  }
+
+  // 重置筛选条件
+  const resetFilters = () => {
+    setSearchQuery('')
+    setSelectedType('all')
+    setSelectedDifficulty('all')
+    setSelectedTag('')
+    setCurrentPage(1)
+  }
+
+  // 渲染难度徽章颜色
+  const getDifficultyColor = (difficulty: DifficultyLevel) => {
+    switch (difficulty) {
+      case DifficultyLevel.EASY: return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+      case DifficultyLevel.MEDIUM: return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+      case DifficultyLevel.HARD: return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300'
+      case DifficultyLevel.EXPERT: return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+    }
+  }
+
+  // 渲染错题卡片
+  const renderMistakeCard = (mistake: MistakeResponse) => (
+    <motion.div
+      key={mistake.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="h-full"
+    >
+      <Card className="h-full hover:shadow-lg transition-shadow duration-300">
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-lg line-clamp-1">
+                {mistake.question_content.substring(0, 50)}
+                {mistake.question_content.length > 50 ? '...' : ''}
+              </CardTitle>
+              <CardDescription className="mt-1">
+                {mistake.question_type}
+              </CardDescription>
+            </div>
+            <Badge className={getDifficultyColor(mistake.difficulty)}>
+              {mistake.difficulty}
+            </Badge>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">知识点标签</p>
+              <div className="flex flex-wrap gap-1">
+                {mistake.knowledge_tags.map(tag => (
+                  <Badge key={tag} variant="outline" className="text-xs">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">错误答案</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                {mistake.wrong_answer}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">正确答案</p>
+              <p className="text-sm text-gray-900 dark:text-gray-100 font-medium">
+                {mistake.correct_answer}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+
+        <CardFooter className="flex justify-between border-t pt-4">
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            创建于 {new Date(mistake.created_at).toLocaleDateString()}
+          </div>
+          <div className="flex gap-2">
+            <Link to={`/mistakes/${mistake.id}`}>
+              <Button size="sm" variant="outline">
+                <Eye className="h-3 w-3 mr-1" />
+                详情
+              </Button>
+            </Link>
+            <Link to={`/mistakes/${mistake.id}?edit=true`}>
+              <Button size="sm" variant="outline">
+                <Edit className="h-3 w-3 mr-1" />
+                编辑
+              </Button>
+            </Link>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-red-600 hover:text-red-700"
+              onClick={() => openDeleteDialog(mistake.id)}
+            >
+              <Trash2 className="h-3 w-3 mr-1" />
+              删除
+            </Button>
+          </div>
+        </CardFooter>
+      </Card>
+    </motion.div>
+  )
+
+  // 渲染加载骨架屏
+  const renderSkeletons = () => (
+    Array.from({ length: 6 }).map((_, index) => (
+      <div key={index} className="space-y-3">
+        <Skeleton className="h-40 rounded-lg" />
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+      </div>
+    ))
+  )
+
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">错题管理</h1>
-      <p className="text-gray-600 dark:text-gray-400">
-        错题管理页面正在开发中...
-      </p>
+    <div className="space-y-6">
+      {/* 页面标题和操作按钮 */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">错题管理</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            管理你的数学错题，进行智能分析和学习规划
+          </p>
+        </div>
+        <Link to="/mistakes/new">
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            新增错题
+          </Button>
+        </Link>
+      </div>
+
+      {/* 错误提示 */}
+      {error && (
+        <Alert variant="destructive" icon={<AlertCircle className="h-4 w-4" />}>
+          {error}
+        </Alert>
+      )}
+
+      {/* 搜索和筛选区域 */}
+      <Card>
+        <CardContent className="pt-6">
+          <form onSubmit={handleSearch} className="space-y-4">
+            {/* 搜索框 */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                type="search"
+                placeholder="搜索题目内容或知识点..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* 筛选器 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* 题目类型筛选 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  题目类型
+                </label>
+                <select
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.target.value as QuestionType | 'all')}
+                  className="input-primary w-full"
+                >
+                  <option value="all">全部类型</option>
+                  {Object.values(QuestionType).map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 难度筛选 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  难度级别
+                </label>
+                <select
+                  value={selectedDifficulty}
+                  onChange={(e) => setSelectedDifficulty(e.target.value as DifficultyLevel | 'all')}
+                  className="input-primary w-full"
+                >
+                  <option value="all">全部难度</option>
+                  {Object.values(DifficultyLevel).map(level => (
+                    <option key={level} value={level}>{level}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 知识点标签筛选 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  知识点标签
+                </label>
+                <select
+                  value={selectedTag}
+                  onChange={(e) => setSelectedTag(e.target.value)}
+                  className="input-primary w-full"
+                >
+                  <option value="">全部标签</option>
+                  {availableTags.map(tag => (
+                    <option key={tag} value={tag}>{tag}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* 操作按钮 */}
+            <div className="flex gap-2 pt-2">
+              <Button type="submit" className="gap-2">
+                <Search className="h-4 w-4" />
+                搜索
+              </Button>
+              <Button type="button" variant="outline" onClick={resetFilters} className="gap-2">
+                <Filter className="h-4 w-4" />
+                重置筛选
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* 结果统计 */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
+          共找到 <span className="font-semibold text-gray-900 dark:text-gray-100">{totalItems}</span> 道错题
+        </div>
+        {totalPages > 1 && (
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            第 <span className="font-semibold">{currentPage}</span> / {totalPages} 页
+          </div>
+        )}
+      </div>
+
+      {/* 错题网格 */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {renderSkeletons()}
+        </div>
+      ) : mistakes.length === 0 ? (
+        <Card className="text-center py-12">
+          <CardContent>
+            <div className="text-gray-400 dark:text-gray-500 mb-4">
+              <Search className="h-12 w-12 mx-auto opacity-50" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">暂无错题数据</h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              {searchQuery || selectedType !== 'all' || selectedDifficulty !== 'all' || selectedTag
+                ? '没有找到符合条件的错题，请尝试调整筛选条件'
+                : '还没有添加任何错题，点击"新增错题"开始添加吧！'}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mistakes.map(renderMistakeCard)}
+          </div>
+
+          {/* 分页控件 */}
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-2 pt-6">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                上一页
+              </Button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum: number
+                if (totalPages <= 5) {
+                  pageNum = i + 1
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i
+                } else {
+                  pageNum = currentPage - 2 + i
+                }
+
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum}
+                  </Button>
+                )
+              })}
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                下一页
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* 删除确认对话框 */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <Card>
+          <CardHeader>
+            <CardTitle>确认删除</CardTitle>
+            <CardDescription>
+              确定要删除这道错题吗？此操作不可撤销。
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 dark:text-gray-400">
+              删除后，该错题及其AI分析结果将永久丢失。
+            </p>
+          </CardContent>
+          <CardFooter className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              取消
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  删除中...
+                </>
+              ) : (
+                '确认删除'
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+      </Dialog>
     </div>
   )
 }
