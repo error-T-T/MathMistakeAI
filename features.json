@@ -1,0 +1,310 @@
+[
+  {
+    "id": "sys-001",
+    "category": "System Infrastructure",
+    "description": "项目基本结构搭建（前后端分离架构）",
+    "acceptance_criteria": [
+      "创建后端FastAPI项目结构",
+      "创建前端React+TypeScript+Vite项目结构",
+      "创建统一的requirements.txt和package.json",
+      "设置Python虚拟环境",
+      "配置前端构建工具"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "sys-002",
+    "category": "System Infrastructure",
+    "description": "Ollama本地模型集成与AI引擎封装",
+    "acceptance_criteria": [
+      "安装并配置Ollama运行环境",
+      "下载并部署Qwen2.5-7B-Instruct模型",
+      "创建ai_engine.py模块封装模型调用",
+      "实现模型健康检查API",
+      "实现带错误处理的模型调用函数"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "sys-003",
+    "category": "System Infrastructure",
+    "description": "数据存储系统（CSV文件操作）",
+    "acceptance_criteria": [
+      "创建错题数据模型（Pydantic）",
+      "实现CSV文件读写操作模块",
+      "实现错题数据的增删改查功能",
+      "添加数据备份与恢复功能",
+      "实现数据导入导出接口"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "fe-001",
+    "category": "Frontend",
+    "description": "前端项目初始化与基础配置",
+    "acceptance_criteria": [
+      "使用Vite创建React+TypeScript项目",
+      "配置Tailwind CSS、Framer Motion、Recharts",
+      "集成MathJax/KaTeX公式渲染",
+      "创建基础布局组件",
+      "设置路由系统"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "fe-002",
+    "category": "Frontend",
+    "description": "主题系统与UI组件库",
+    "acceptance_criteria": [
+      "实现科技蓝主题样式",
+      "实现深夜模式主题样式",
+      "创建主题切换组件",
+      "设计统一的按钮、输入框、卡片组件",
+      "实现响应式布局系统"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "fe-003",
+    "category": "Frontend",
+    "description": "首页设计与实现",
+    "acceptance_criteria": [
+      "创建系统介绍区域",
+      "实现功能导航大卡片",
+      "添加近期错题统计概览",
+      "实现平滑的页面切换动画",
+      "确保高可访问性（对比度、字体）"
+    ],
+    "passes": false,
+    "priority": "medium"
+  },
+  {
+    "id": "fe-004",
+    "category": "Frontend",
+    "description": "错题管理页面",
+    "acceptance_criteria": [
+      "实现卡片网格布局展示错题",
+      "添加搜索功能（按题目内容、知识点）",
+      "实现筛选功能（按标签、难度）",
+      "创建错题详情模态框/页面",
+      "支持错题的编辑和删除"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "fe-005",
+    "category": "Frontend",
+    "description": "错题详情页面",
+    "acceptance_criteria": [
+      "动态展示题目内容（支持LaTeX公式）",
+      "显示错误过程与正确答案对比",
+      "展示AI分析结果（错误原因、分步解析、通法）",
+      "显示关联知识点标签",
+      "提供导航返回功能"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "fe-006",
+    "category": "Frontend",
+    "description": "智能生成页面",
+    "acceptance_criteria": [
+      "创建参数配置面板（滑动条、下拉菜单、多选框）",
+      "实现实时预览区域",
+      "添加生成按钮与加载状态",
+      "显示生成结果（题目列表）",
+      "支持生成结果的导出"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "fe-007",
+    "category": "Frontend",
+    "description": "数据统计页面",
+    "acceptance_criteria": [
+      "实现近期错题趋势折线图（Recharts）",
+      "创建知识点分布饼图",
+      "实现难度分布柱状图（带升起动画）",
+      "添加图表交互功能（悬停提示、点击筛选）",
+      "设计美观的统计卡片布局"
+    ],
+    "passes": false,
+    "priority": "medium"
+  },
+  {
+    "id": "be-001",
+    "category": "Backend",
+    "description": "FastAPI后端初始化",
+    "acceptance_criteria": [
+      "创建FastAPI应用实例",
+      "配置CORS中间件",
+      "实现健康检查端点",
+      "设置API路由分组",
+      "添加请求日志记录"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "be-002",
+    "category": "Backend",
+    "description": "数据导入API（文本文件处理）",
+    "acceptance_criteria": [
+      "实现固定格式文本文件解析",
+      "支持粘贴文本的直接导入",
+      "验证数据格式完整性",
+      "将解析数据存储到CSV",
+      "返回导入结果的统计信息"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "be-003",
+    "category": "Backend",
+    "description": "错题分析API（AI集成）",
+    "acceptance_criteria": [
+      "设计错题分析提示词模板",
+      "调用Ollama模型进行分析",
+      "解析模型返回的结构化结果",
+      "存储分析结果到数据系统",
+      "返回JSON格式的分析结果"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "be-004",
+    "category": "Backend",
+    "description": "相似题目生成API",
+    "acceptance_criteria": [
+      "设计相似题目生成提示词模板",
+      "支持相似度等级参数控制",
+      "支持数量、难度、知识点参数",
+      "调用Ollama模型生成题目",
+      "返回生成题目列表"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "be-005",
+    "category": "Backend",
+    "description": "智能组卷API",
+    "acceptance_criteria": [
+      "实现试卷参数配置解析",
+      "设计题目筛选与组合算法",
+      "生成试卷结构（标题、题目顺序）",
+      "调用Ollama生成每道题的解析",
+      "返回完整的试卷数据"
+    ],
+    "passes": false,
+    "priority": "medium"
+  },
+  {
+    "id": "be-006",
+    "category": "Backend",
+    "description": "试卷导出API（DOCX生成）",
+    "acceptance_criteria": [
+      "使用python-docx库创建文档",
+      "实现试卷模板（页眉、页脚、题目格式）",
+      "将LaTeX公式转换为Word公式",
+      "生成答案解析文档",
+      "提供文件下载端点"
+    ],
+    "passes": false,
+    "priority": "medium"
+  },
+  {
+    "id": "ai-001",
+    "category": "AI Engine",
+    "description": "自然语言处理（NLP）特征提取",
+    "acceptance_criteria": [
+      "实现数学公式/符号识别",
+      "提取题目文本特征（公式复杂度、符号密度）",
+      "分类题目类型（计算题、证明题等）",
+      "识别知识点标签",
+      "分析题目难度等级"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "ai-002",
+    "category": "AI Engine",
+    "description": "提示词工程模板设计",
+    "acceptance_criteria": [
+      "设计错题分析提示词模板",
+      "设计相似题目生成提示词模板",
+      "设计试卷解析生成提示词模板",
+      "实现模板变量替换系统",
+      "测试提示词效果并优化"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "ai-003",
+    "category": "AI Engine",
+    "description": "文本生成与解析",
+    "acceptance_criteria": [
+      "实现分步骤题目解析生成",
+      "生成通用解法（通法）总结",
+      "生成特定解题套路说明",
+      "实现题目变体生成",
+      "生成学习建议"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "ai-004",
+    "category": "AI Engine",
+    "description": "简单推荐逻辑实现",
+    "acceptance_criteria": [
+      "基于知识点相似度推荐题目",
+      "基于难度匹配推荐题目",
+      "实现错题关联性分析",
+      "设计个性化学习路径推荐",
+      "实现智能组卷算法"
+    ],
+    "passes": false,
+    "priority": "medium"
+  },
+  {
+    "id": "data-001",
+    "category": "Data",
+    "description": "示例数据集创建",
+    "acceptance_criteria": [
+      "收集约100道高等数学/线性代数计算题",
+      "格式化数据符合模板规范",
+      "包含多样化的题目类型和难度",
+      "覆盖主要数学知识点",
+      "提供错误过程和正确答案"
+    ],
+    "passes": false,
+    "priority": "medium"
+  },
+  {
+    "id": "test-001",
+    "category": "Testing",
+    "description": "基础功能冒烟测试",
+    "acceptance_criteria": [
+      "启动开发服务器并验证运行",
+      "测试数据导入功能",
+      "测试AI分析基本流程",
+      "测试前端页面加载",
+      "验证核心API端点响应"
+    ],
+    "passes": false,
+    "priority": "medium"
+  }
+]
