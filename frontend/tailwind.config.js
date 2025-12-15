@@ -47,7 +47,10 @@ export default {
           800: '#1e293b',
           900: '#0f172a',
           950: '#020617',
-        }
+        },
+        // CSS变量颜色
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
