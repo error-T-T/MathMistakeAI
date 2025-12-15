@@ -108,7 +108,7 @@
       "显示关联知识点标签",
       "提供导航返回功能"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {
