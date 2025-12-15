@@ -247,7 +247,7 @@ const MistakeDetailPage = () => {
               placeholder="请输入题目内容，支持LaTeX公式（使用$...$包围）"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              提示：使用 $公式$ 插入行内LaTeX公式，如 $\lim_{x\to 0}\frac{\sin x}{x}=1$
+              提示：使用 $公式$ 插入行内LaTeX公式，如 $x^2 + y^2 = 1$
             </p>
           </div>
 

@@ -122,7 +122,7 @@
       "显示生成结果（题目列表）",
       "支持生成结果的导出"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {
