@@ -9,19 +9,10 @@ import time
 import logging
 from fastapi import Request
 from typing import Callable
-from fastapi.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
-# 配置日志
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),  # 输出到控制台
-        logging.FileHandler('logs/backend.log', encoding='utf-8')  # 输出到文件
-    ]
-)
-
-logger = logging.getLogger("math_mistake_api")
+# 延迟配置日志，在setup_logging()中初始化
+logger = None  # 将在setup_logging()中初始化
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     """请求日志记录中间件"""
@@ -89,11 +80,13 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 def setup_logging():
     """设置日志配置"""
     import os
+    global logger  # 声明logger为全局变量
     os.makedirs("logs", exist_ok=True)
 
     # 创建不同的日志记录器
     api_logger = logging.getLogger("math_mistake_api")
     api_logger.setLevel(logging.INFO)
+    logger = api_logger  # 设置全局logger变量
 
     data_logger = logging.getLogger("math_mistake_data")
     data_logger.setLevel(logging.INFO)

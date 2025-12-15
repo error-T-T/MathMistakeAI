@@ -6,11 +6,28 @@ GitHub ID: error-T-T
 """
 
 import os
+import sys
 import json
 import random
 import requests
 from typing import Dict, Any, Optional
 from .data_models import AnalysisRequest, AnalysisResponse
+
+def safe_print(text: str):
+    """安全打印函数，处理Windows控制台编码问题"""
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        # 在Windows GBK编码控制台中，尝试使用替换或直接写入
+        try:
+            # 尝试使用UTF-8编码写入
+            sys.stdout.buffer.write(text.encode('utf-8'))
+            sys.stdout.buffer.write(b'\n')
+            sys.stdout.buffer.flush()
+        except:
+            # 最后回退：移除非ASCII字符
+            cleaned = ''.join(c if ord(c) < 128 else '?' for c in text)
+            print(cleaned)
 
 class AIEngine:
     """AI引擎（真实Ollama集成版本）"""
@@ -28,8 +45,8 @@ class AIEngine:
     def _test_connection(self):
         """测试AI服务连接（真实连接测试）"""
         try:
-            print(f"🤖 尝试连接AI服务: {self.base_url}")
-            print(f"📚 使用模型: {self.model}")
+            safe_print(f"🤖 尝试连接AI服务: {self.base_url}")
+            safe_print(f"📚 使用模型: {self.model}")
 
             # 测试Ollama API连接
             response = self.client.get(f"{self.base_url}/api/tags", timeout=5.0)
@@ -40,21 +57,21 @@ class AIEngine:
                 if self.model in model_names:
                     self.is_connected = True
                     self.fallback_mode = False
-                    print(f"✅ AI引擎初始化完成 - 已连接到模型: {self.model}")
+                    safe_print(f"✅ AI引擎初始化完成 - 已连接到模型: {self.model}")
                 else:
-                    print(f"⚠️  模型 {self.model} 未找到，可用模型: {model_names}")
-                    print("⚠️  将使用模拟模式")
+                    safe_print(f"⚠️  模型 {self.model} 未找到，可用模型: {model_names}")
+                    safe_print("⚠️  将使用模拟模式")
                     self.is_connected = False
                     self.fallback_mode = True
             else:
-                print(f"❌ Ollama服务响应异常: {response.status_code}")
-                print("⚠️  将使用模拟模式")
+                safe_print(f"❌ Ollama服务响应异常: {response.status_code}")
+                safe_print("⚠️  将使用模拟模式")
                 self.is_connected = False
                 self.fallback_mode = True
 
         except Exception as e:
-            print(f"❌ AI服务连接失败: {e}")
-            print("⚠️  将使用模拟模式")
+            safe_print(f"❌ AI服务连接失败: {e}")
+            safe_print("⚠️  将使用模拟模式")
             self.is_connected = False
             self.fallback_mode = True
 

@@ -19,6 +19,22 @@ from contextlib import asynccontextmanager
 import uvicorn
 from dotenv import load_dotenv
 
+def safe_print(text: str):
+    """安全打印函数，处理Windows控制台编码问题"""
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        # 在Windows GBK编码控制台中，尝试使用替换或直接写入
+        try:
+            # 尝试使用UTF-8编码写入
+            sys.stdout.buffer.write(text.encode('utf-8'))
+            sys.stdout.buffer.write(b'\n')
+            sys.stdout.buffer.flush()
+        except:
+            # 最后回退：移除非ASCII字符
+            cleaned = ''.join(c if ord(c) < 128 else '?' for c in text)
+            print(cleaned)
+
 # 导入自定义中间件
 from middleware.logging_middleware import LoggingMiddleware
 
@@ -37,8 +53,8 @@ load_dotenv(".env")
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
     # 启动时
-    print("🚀 MathMistakeAI 后端服务启动中...")
-    print(f"📊 使用AI模型: {os.getenv('OLLAMA_MODEL', 'qwen2.5:7b-instruct')}")
+    safe_print("🚀 MathMistakeAI 后端服务启动中...")
+    safe_print(f"📊 使用AI模型: {os.getenv('OLLAMA_MODEL', 'qwen2.5:7b-instruct')}")
 
     # 初始化数据目录
     os.makedirs("data", exist_ok=True)
@@ -47,7 +63,7 @@ async def lifespan(app: FastAPI):
 
     yield
     # 关闭时
-    print("👋 MathMistakeAI 后端服务关闭")
+    safe_print("👋 MathMistakeAI 后端服务关闭")
 
 # 创建FastAPI应用
 app = FastAPI(
@@ -117,7 +133,7 @@ async def get_version():
 if __name__ == "__main__":
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", "8000"))
-    print(f"🌐 服务器启动于: http://{host}:{port}")
-    print(f"📚 API文档: http://{host}:{port}/docs")
-    print(f"📊 健康检查: http://{host}:{port}/health")
+    safe_print(f"🌐 服务器启动于: http://{host}:{port}")
+    safe_print(f"📚 API文档: http://{host}:{port}/docs")
+    safe_print(f"📊 健康检查: http://{host}:{port}/health")
     uvicorn.run(app, host=host, port=port)
