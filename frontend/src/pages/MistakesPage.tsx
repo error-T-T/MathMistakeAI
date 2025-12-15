@@ -38,73 +38,35 @@ const MistakesPage = () => {
   // 标签列表（从错题中提取）
   const [availableTags, setAvailableTags] = useState<string[]>([])
 
-  // 获取错题列表
+  // 在你的 MistakesPage.tsx 中修改 fetchMistakes 函数
   const fetchMistakes = async () => {
     try {
-      setLoading(true)
-      setError(null)
-
-      const params: PaginationParams = {
-        page: currentPage,
-        page_size: pageSize,
-        search: searchQuery || undefined,
-        question_type: selectedType !== 'all' ? selectedType : undefined,
-        difficulty: selectedDifficulty !== 'all' ? selectedDifficulty : undefined,
-        knowledge_tag: selectedTag || undefined,
+      const response = await getMistakes(userId);
+      console.log('错题列表API响应:', response); // 添加这行查看响应结构
+    
+      // 根据实际API响应调整
+      if (response && response.items && Array.isArray(response.items)) {
+        // 如果API返回 { items: [...] }
+        setMistakes(response.items);
+      }else if (response && response.data && Array.isArray(response.data)) {
+        // 如果API返回 { data: [...] }
+        setMistakes(response.data);
+      } else if (Array.isArray(response)) {
+        // 如果API直接返回数组
+        setMistakes(response);
+      } else {
+        console.error('Unexpected response format:', response);
+        setMistakes([]); // 设置为空数组而不是 undefined
       }
-
-      const response = await mistakesApi.getMistakes(params)
-      setMistakes(response.items)
-      setTotalItems(response.total)
-      setTotalPages(response.total_pages)
-
-      // 提取唯一的标签
-      const tags = new Set<string>()
-      response.items.forEach(mistake => {
-        mistake.knowledge_tags.forEach(tag => tags.add(tag))
-      })
-      setAvailableTags(Array.from(tags))
-
-    } catch (err: any) {
-      setError(err.message || '获取错题列表失败')
-      console.error('获取错题列表失败:', err)
+    } catch (error) {
+      console.error('获取错题列表失败:', error);
+      setMistakes([]); // 确保设置为空数组
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  // 初始加载和筛选条件变化时重新获取
-  useEffect(() => {
-    fetchMistakes()
-  }, [currentPage, searchQuery, selectedType, selectedDifficulty, selectedTag])
-
-  // 处理搜索
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    setCurrentPage(1) // 重置到第一页
-    fetchMistakes()
-  }
-
-  // 处理删除错题
-  const handleDelete = async () => {
-    if (!mistakeToDelete) return
-
-    try {
-      setDeleting(true)
-      await mistakesApi.deleteMistake(mistakeToDelete)
-
-      // 从列表中移除已删除的错题
-      setMistakes(prev => prev.filter(m => m.id !== mistakeToDelete))
-      setDeleteDialogOpen(false)
-      setMistakeToDelete(null)
-
-    } catch (err: any) {
-      setError(err.message || '删除错题失败')
-      console.error('删除错题失败:', err)
-    } finally {
-      setDeleting(false)
-    }
-  }
+// 注意：mistakes状态已在第17行声明，这里不需要重复声明
 
   // 打开删除确认对话框
   const openDeleteDialog = (id: string) => {

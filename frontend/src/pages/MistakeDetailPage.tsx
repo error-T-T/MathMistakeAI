@@ -28,27 +28,46 @@ const MistakeDetailPage = () => {
   const [analyzing, setAnalyzing] = useState(false)
 
   // 编辑模式状态
-  const [editData, setEditData] = useState<Partial<MistakeResponse> | null>(null)
+  const [editData, setEditData] = useState<Partial<MistakeResponse>>({
+    question_content: '',
+    wrong_process: '',
+    wrong_answer: '',
+    correct_answer: '',
+    knowledge_tags: [],
+    notes: '',
+  })
 
   // 获取错题详情
   const fetchMistake = async () => {
-    if (!id) return
+    if (!id) {
+      setError('错题ID不存在')
+      setLoading(false)
+      return
+    }
 
     try {
       setLoading(true)
       setError(null)
       const data = await mistakesApi.getMistake(id)
+      console.log('错题详情API响应:', data) // 调试信息
+      
+      // 确保数据格式正确
+      if (!data) {
+        throw new Error('未获取到错题数据')
+      }
+      
       setMistake(data)
       setEditData({
-        question_content: data.question_content,
-        wrong_process: data.wrong_process,
-        wrong_answer: data.wrong_answer,
-        correct_answer: data.correct_answer,
-        knowledge_tags: [...data.knowledge_tags],
+        question_content: data.question_content || '',
+        wrong_process: data.wrong_process || '',
+        wrong_answer: data.wrong_answer || '',
+        correct_answer: data.correct_answer || '',
+        knowledge_tags: Array.isArray(data.knowledge_tags) ? [...data.knowledge_tags] : [],
         notes: data.notes || '',
       })
     } catch (err: any) {
-      setError(err.message || '获取错题详情失败')
+      const errorMessage = err.message || '获取错题详情失败'
+      setError(errorMessage)
       console.error('获取错题详情失败:', err)
     } finally {
       setLoading(false)
@@ -57,7 +76,7 @@ const MistakeDetailPage = () => {
 
   // 请求AI分析
   const handleAnalyze = async () => {
-    if (!id) return
+    if (!id || !mistake) return
 
     try {
       setAnalyzing(true)
@@ -101,6 +120,8 @@ const MistakeDetailPage = () => {
 
   // 渲染LaTeX内容
   const renderWithLatex = (text: string) => {
+    if (!text) return null
+    
     // 简单的LaTeX检测：包含$...$或$$...$$
     if (text.includes('$')) {
       try {
@@ -137,92 +158,109 @@ const MistakeDetailPage = () => {
   }
 
   // 渲染分析结果部分
-  const renderAnalysis = (analysis: AnalysisResult) => (
-    <Card className="mt-6">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Brain className="h-5 w-5 text-tech-blue-600 dark:text-tech-blue-400 mr-2" />
-            <CardTitle>AI分析结果</CardTitle>
-          </div>
-          <Badge className="bg-tech-blue-100 text-tech-blue-800 dark:bg-tech-blue-900 dark:text-tech-blue-300">
-            置信度: {Math.round(analysis.confidence_score * 100)}%
-          </Badge>
-        </div>
-        <CardDescription>
-          分析时间: {new Date(analysis.analyzed_at).toLocaleString()}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* 错误类型 */}
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-            <AlertCircle className="h-4 w-4 mr-1 text-red-500" />
-            错误类型
-          </h4>
-          <p className="text-gray-900 dark:text-gray-100">{analysis.error_type}</p>
-        </div>
-
-        {/* 根本原因 */}
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-            <AlertCircle className="h-4 w-4 mr-1 text-orange-500" />
-            根本原因
-          </h4>
-          <p className="text-gray-900 dark:text-gray-100">{analysis.root_cause}</p>
-        </div>
-
-        {/* 知识漏洞 */}
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-            <BookOpen className="h-4 w-4 mr-1 text-blue-500" />
-            知识漏洞
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            {analysis.knowledge_gap.map((gap, index) => (
-              <Badge key={index} variant="outline" className="text-sm">
-                {gap}
+  const renderAnalysis = (analysis: AnalysisResult) => {
+    // 确保analysis存在且有数据
+    if (!analysis) return null
+    
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Brain className="h-5 w-5 text-tech-blue-600 dark:text-tech-blue-400 mr-2" />
+              <CardTitle>AI分析结果</CardTitle>
+            </div>
+            {analysis.confidence_score && (
+              <Badge className="bg-tech-blue-100 text-tech-blue-800 dark:bg-tech-blue-900 dark:text-tech-blue-300">
+                置信度: {Math.round(analysis.confidence_score * 100)}%
               </Badge>
-            ))}
+            )}
           </div>
-        </div>
+          {analysis.analyzed_at && (
+            <CardDescription>
+              分析时间: {new Date(analysis.analyzed_at).toLocaleString()}
+            </CardDescription>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* 错误类型 */}
+          {analysis.error_type && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-1 text-red-500" />
+                错误类型
+              </h4>
+              <p className="text-gray-900 dark:text-gray-100">{analysis.error_type}</p>
+            </div>
+          )}
 
-        {/* 学习建议 */}
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-            <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
-            学习建议
-          </h4>
-          <ul className="space-y-2">
-            {analysis.learning_suggestions.map((suggestion, index) => (
-              <li key={index} className="flex items-start">
-                <div className="h-2 w-2 rounded-full bg-tech-blue-500 mt-2 mr-3"></div>
-                <span className="text-gray-900 dark:text-gray-100">{suggestion}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+          {/* 根本原因 */}
+          {analysis.root_cause && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-1 text-orange-500" />
+                根本原因
+              </h4>
+              <p className="text-gray-900 dark:text-gray-100">{analysis.root_cause}</p>
+            </div>
+          )}
 
-        {/* 相似例题 */}
-        {analysis.similar_examples.length > 0 && (
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-              <BarChart className="h-4 w-4 mr-1 text-purple-500" />
-              相似例题
-            </h4>
-            <ul className="space-y-2">
-              {analysis.similar_examples.map((example, index) => (
-                <li key={index} className="flex items-start">
-                  <div className="h-2 w-2 rounded-full bg-purple-500 mt-2 mr-3"></div>
-                  <span className="text-gray-900 dark:text-gray-100">{renderWithLatex(example)}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
+          {/* 知识漏洞 */}
+          {analysis.knowledge_gap && analysis.knowledge_gap.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                <BookOpen className="h-4 w-4 mr-1 text-blue-500" />
+                知识漏洞
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {analysis.knowledge_gap.map((gap, index) => (
+                  <Badge key={index} variant="outline" className="text-sm">
+                    {gap}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 学习建议 */}
+          {analysis.learning_suggestions && analysis.learning_suggestions.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
+                学习建议
+              </h4>
+              <ul className="space-y-2">
+                {analysis.learning_suggestions.map((suggestion, index) => (
+                  <li key={index} className="flex items-start">
+                    <div className="h-2 w-2 rounded-full bg-tech-blue-500 mt-2 mr-3"></div>
+                    <span className="text-gray-900 dark:text-gray-100">{suggestion}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* 相似例题 */}
+          {analysis.similar_examples && analysis.similar_examples.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                <BarChart className="h-4 w-4 mr-1 text-purple-500" />
+                相似例题
+              </h4>
+              <ul className="space-y-2">
+                {analysis.similar_examples.map((example, index) => (
+                  <li key={index} className="flex items-start">
+                    <div className="h-2 w-2 rounded-full bg-purple-500 mt-2 mr-3"></div>
+                    <span className="text-gray-900 dark:text-gray-100">{renderWithLatex(example)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    )
+  }
 
   // 渲染编辑表单
   const renderEditForm = () => {
@@ -354,16 +392,20 @@ const MistakeDetailPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-2xl">
-                  {renderWithLatex(mistake.question_content)}
+                  {renderWithLatex(mistake.question_content || '无题目内容')}
                 </CardTitle>
                 <div className="flex items-center gap-4 mt-2">
-                  <Badge>{mistake.question_type}</Badge>
-                  <Badge className={getDifficultyColor(mistake.difficulty)}>
-                    {mistake.difficulty}
-                  </Badge>
+                  {mistake.question_type && (
+                    <Badge>{mistake.question_type}</Badge>
+                  )}
+                  {mistake.difficulty && (
+                    <Badge className={getDifficultyColor(mistake.difficulty)}>
+                      {mistake.difficulty}
+                    </Badge>
+                  )}
                   <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                     <Clock className="h-4 w-4 mr-1" />
-                    创建于 {new Date(mistake.created_at).toLocaleDateString()}
+                    {mistake.created_at ? `创建于 ${new Date(mistake.created_at).toLocaleDateString()}` : '未知创建时间'}
                   </div>
                 </div>
               </div>
@@ -376,16 +418,18 @@ const MistakeDetailPage = () => {
 
           <CardContent className="space-y-6">
             {/* 知识点标签 */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">知识点标签</h4>
-              <div className="flex flex-wrap gap-2">
-                {mistake.knowledge_tags.map((tag, index) => (
-                  <Badge key={index} variant="outline" className="text-sm">
-                    {tag}
-                  </Badge>
-                ))}
+            {mistake.knowledge_tags && mistake.knowledge_tags.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">知识点标签</h4>
+                <div className="flex flex-wrap gap-2">
+                  {mistake.knowledge_tags.map((tag, index) => (
+                    <Badge key={index} variant="outline" className="text-sm">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* 答案对比 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -396,7 +440,7 @@ const MistakeDetailPage = () => {
                 </h4>
                 <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
                   <CardContent className="py-3">
-                    <p className="text-red-700 dark:text-red-300">{renderWithLatex(mistake.wrong_answer)}</p>
+                    <p className="text-red-700 dark:text-red-300">{renderWithLatex(mistake.wrong_answer || '无错误答案')}</p>
                   </CardContent>
                 </Card>
                 {mistake.wrong_process && (
@@ -415,7 +459,7 @@ const MistakeDetailPage = () => {
                 <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
                   <CardContent className="py-3">
                     <p className="text-green-700 dark:text-green-300 font-medium">
-                      {renderWithLatex(mistake.correct_answer)}
+                      {renderWithLatex(mistake.correct_answer || '无正确答案')}
                     </p>
                   </CardContent>
                 </Card>

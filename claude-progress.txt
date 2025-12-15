@@ -499,3 +499,32 @@ GitHub: error-T-T
 Rookie & 艾可希雅
 GitHub: error-T-T
 邮箱: RookieT@e.gzhu.edu.cn
+
+## 会话 2025-12-16 03:30
+- **用户需求**: 实现一个一键启动的解决方案，避免每次使用终端，并自动清理端口
+- **分析现状**: 已有start.bat和start.sh启动脚本，提供基本的一键启动和端口清理功能
+- **实现功能**: 创建高级启动器系统，包含：
+  1. **launcher.py**: Python高级启动器，提供智能端口清理、依赖检查、服务监控、优雅退出
+  2. **launch.bat**: Windows启动脚本，调用Python启动器
+  3. **一键启动.bat**: 中文名启动脚本，方便用户识别和双击运行
+  4. **test_launcher.py**: 启动器功能测试脚本
+- **核心特性**:
+  - 一键启动前后端服务，自动打开浏览器
+  - 智能端口清理（8000-8008, 5173-5176）
+  - 依赖自动检查（Python、Node.js、npm、Ollama）
+  - 服务健康监控和状态显示
+  - Ctrl+C优雅退出，自动清理进程和端口
+  - 跨平台支持（Windows/Linux/Mac）
+  - 彩色控制台输出和详细日志
+- **保留兼容**: 原有的start.bat和start.sh作为备用方案
+- **测试验证**: 启动器基本功能测试通过，端口清理和依赖检查正常工作
+- **使用方法**:
+  - Windows用户: 双击"一键启动.bat"或"launch.bat"
+  - 开发者: 运行"python launcher.py"
+  - Linux/Mac: 运行"./start.sh"或"python launcher.py"
+- **项目状态**: 一键启动解决方案完成，用户只需双击即可启动完整应用，使用后自动清理
+
+--- 签名 ---
+Rookie & 艾可希雅
+GitHub: error-T-T
+邮箱: RookieT@e.gzhu.edu.cn

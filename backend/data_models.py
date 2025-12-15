@@ -106,3 +106,11 @@ class PaginatedResponse(BaseModel, Generic[T]):
     page: int = Field(..., description="当前页码")
     page_size: int = Field(..., description="每页记录数")
     total_pages: int = Field(..., description="总页数")
+
+
+class GeneratePracticeRequest(BaseModel):
+    """生成练习题请求模型"""
+    knowledge_gaps: List[str] = Field(..., description="知识漏洞列表")
+    difficulty: Optional[str] = Field(None, description="难度级别（简单/中等/困难）")
+    count: int = Field(5, ge=1, le=20, description="生成题目数量")
+    similarity_level: Optional[str] = Field(None, description="相似度等级（低/中/高）")
