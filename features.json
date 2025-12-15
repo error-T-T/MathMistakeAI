@@ -150,7 +150,7 @@
       "设置API路由分组",
       "添加请求日志记录"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {

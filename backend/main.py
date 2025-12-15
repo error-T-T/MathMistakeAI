@@ -19,6 +19,9 @@ from contextlib import asynccontextmanager
 import uvicorn
 from dotenv import load_dotenv
 
+# 导入自定义中间件
+from middleware.logging_middleware import LoggingMiddleware
+
 # 导入路由
 try:
     from routers import mistakes, ai
@@ -40,6 +43,7 @@ async def lifespan(app: FastAPI):
     # 初始化数据目录
     os.makedirs("data", exist_ok=True)
     os.makedirs("sample_data", exist_ok=True)
+    os.makedirs("logs", exist_ok=True)
 
     yield
     # 关闭时
@@ -62,6 +66,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 配置请求日志记录中间件
+app.add_middleware(LoggingMiddleware)
 
 # 注册路由
 app.include_router(mistakes.router, prefix="/api")
