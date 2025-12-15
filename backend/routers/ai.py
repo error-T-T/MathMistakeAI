@@ -19,10 +19,9 @@ from typing import List
 
 # 直接导入（已设置sys.path）
 from ai_engine import AIEngine
-from data_models import AnalysisRequest, AnalysisResponse
+from data_models import AnalysisRequest, AnalysisResponse, GeneratePracticeRequest
 
-router = APIRouter(prefix="/ai", tags=["AI分析"])
-
+# 初始化路由 - 只定义一次
 router = APIRouter(prefix="/ai", tags=["AI分析"])
 
 # 初始化AI引擎
@@ -38,20 +37,30 @@ async def analyze_mistake_directly(request: AnalysisRequest):
         raise HTTPException(status_code=500, detail=f"AI分析失败: {str(e)}")
 
 @router.post("/generate-practice")
-async def generate_practice_questions(
-    knowledge_gaps: List[str],
-    count: int = Query(5, ge=1, le=20, description="生成题目数量")
-):
-    """根据知识漏洞生成练习题"""
+async def generate_practice_questions(request: GeneratePracticeRequest):
+    """根据知识漏洞和参数生成练习题"""
     try:
-        questions = ai_engine.generate_practice_questions(knowledge_gaps, count)
+        questions = ai_engine.generate_practice_questions(
+            knowledge_gaps=request.knowledge_gaps,
+            count=request.count,
+            difficulty=request.difficulty,
+            similarity_level=request.similarity_level
+        )
         return {
-            "knowledge_gaps": knowledge_gaps,
+            "knowledge_gaps": request.knowledge_gaps,
+            "difficulty": request.difficulty,
+            "similarity_level": request.similarity_level,
             "count": len(questions),
             "questions": questions
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"生成练习题失败: {str(e)}")
+        # 移除错误信息中的emoji字符，避免编码问题
+        error_msg = str(e)
+        # 移除常见的emoji和特殊字符
+        cleaned_error = ''.join(c for c in error_msg if ord(c) < 128)
+        if not cleaned_error:
+            cleaned_error = "生成练习题时发生未知错误"
+        raise HTTPException(status_code=500, detail=f"生成练习题失败: {cleaned_error}")
 
 @router.get("/explain/{concept}")
 async def explain_concept(concept: str):

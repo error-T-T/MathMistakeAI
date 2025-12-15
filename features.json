@@ -192,7 +192,7 @@
       "调用Ollama模型生成题目",
       "返回生成题目列表"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {
@@ -304,7 +304,7 @@
       "测试前端页面加载",
       "验证核心API端点响应"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "medium"
   }
 ]

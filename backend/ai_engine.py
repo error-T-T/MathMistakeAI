@@ -15,19 +15,13 @@ from data_models import AnalysisRequest, AnalysisResponse
 
 def safe_print(text: str):
     """安全打印函数，处理Windows控制台编码问题"""
+    # 先清理文本中的非ASCII字符，避免编码问题
+    cleaned_text = ''.join(c if ord(c) < 128 else '?' for c in text)
     try:
-        print(text)
-    except UnicodeEncodeError:
-        # 在Windows GBK编码控制台中，尝试使用替换或直接写入
-        try:
-            # 尝试使用UTF-8编码写入
-            sys.stdout.buffer.write(text.encode('utf-8'))
-            sys.stdout.buffer.write(b'\n')
-            sys.stdout.buffer.flush()
-        except:
-            # 最后回退：移除非ASCII字符
-            cleaned = ''.join(c if ord(c) < 128 else '?' for c in text)
-            print(cleaned)
+        print(cleaned_text)
+    except Exception as e:
+        # 如果还有异常，只打印简单信息
+        print(f"[打印错误] {type(e).__name__}: {str(e)[:50]}")
 
 class AIEngine:
     """AI引擎（真实Ollama集成版本）"""
@@ -220,44 +214,72 @@ class AIEngine:
                     )
 
                 except json.JSONDecodeError as e:
-                    print(f"❌ JSON解析失败: {e}")
-                    print(f"📝 原始响应: {content[:200]}...")
-                    print("⚠️  使用模拟分析作为回退")
+                    safe_print(f"❌ JSON解析失败: {e}")
+                    safe_print(f"📝 原始响应: {content[:200]}...")
+                    safe_print("⚠️  使用模拟分析作为回退")
                     return self._generate_mock_analysis(request)
 
             else:
-                print(f"❌ Ollama API请求失败: {response.status_code}")
-                print(f"📝 响应: {response.text}")
-                print("⚠️  使用模拟分析作为回退")
+                safe_print(f"❌ Ollama API请求失败: {response.status_code}")
+                safe_print(f"📝 响应: {response.text}")
+                safe_print("⚠️  使用模拟分析作为回退")
                 return self._generate_mock_analysis(request)
 
         except Exception as e:
-            print(f"❌ AI分析过程中发生异常: {e}")
-            print("⚠️  使用模拟分析作为回退")
+            safe_print(f"❌ AI分析过程中发生异常: {e}")
+            safe_print("⚠️  使用模拟分析作为回退")
             return self._generate_mock_analysis(request)
 
-    def generate_practice_questions(self, knowledge_gaps: list, count: int = 5) -> list:
-        """生成练习题（真实AI生成）"""
-        print(f"📝 为知识漏洞 {knowledge_gaps} 生成 {count} 道练习题")
+    def generate_practice_questions(self, knowledge_gaps: list, count: int = 5,
+                                   difficulty: str = None, similarity_level: str = None) -> list:
+        """生成相似练习题（真实AI生成）"""
+        safe_print(f"📝 为知识漏洞 {knowledge_gaps} 生成 {count} 道练习题")
+        safe_print(f"📊 参数: 难度={difficulty}, 相似度等级={similarity_level}")
 
         if self.fallback_mode or not self.is_connected:
-            print("⚠️  AI服务未连接，使用模拟数据")
-            return self._generate_mock_practice_questions(knowledge_gaps, count)
+            safe_print("⚠️  AI服务未连接，使用模拟数据")
+            return self._generate_mock_practice_questions(knowledge_gaps, count, difficulty, similarity_level)
 
         try:
-            # 构造提示词
-            system_prompt = "你是一个专业的数学教师，请根据给定的知识漏洞生成练习题。"
+            # 构造相似题目生成提示词模板
+            system_prompt = """你是一个专业的数学教师，专门生成相似练习题来帮助学生巩固知识。
+请根据给定的知识漏洞、难度要求和相似度等级，生成高质量的数学练习题。
+
+相似度等级说明：
+- 低相似度：题目核心概念相同，但形式、参数、背景完全不同
+- 中相似度：题目类型和解题方法相似，但具体条件和数值不同
+- 高相似度：题目结构、解题步骤高度相似，仅改变具体数值或简单条件
+
+请确保生成的题目：
+1. 准确覆盖指定的知识漏洞
+2. 符合指定的难度级别
+3. 满足相似度等级要求
+4. 包含清晰的题目描述和正确答案
+5. 提供详细的解题思路和解释"""
+
+            # 构建用户消息，包含相似度等级参数
+            similarity_instruction = ""
+            if similarity_level:
+                similarity_instruction = f"\n相似度等级要求: {similarity_level}（请严格按照上述相似度等级说明生成题目）"
+
+            difficulty_instruction = ""
+            if difficulty:
+                difficulty_instruction = f"\n难度要求: {difficulty}"
 
             user_message = f"""请为以下知识漏洞生成{count}道数学练习题：
-知识漏洞: {', '.join(knowledge_gaps)}
+知识漏洞: {', '.join(knowledge_gaps)}{difficulty_instruction}{similarity_instruction}
 
-请返回一个JSON数组，每个练习题对象包含以下字段：
+请返回一个JSON数组，每个练习题对象必须包含以下字段：
 {{
-    "question": "题目内容",
-    "answer": "正确答案",
-    "explanation": "解题思路和解释",
-    "difficulty": "简单/中等/困难"
-}}"""
+    "question": "题目内容（使用LaTeX格式表示数学公式，如$\\int_0^1 x^2 dx$）",
+    "answer": "正确答案（使用LaTeX格式表示数学公式）",
+    "explanation": "详细的解题思路和分步解释",
+    "difficulty": "简单/中等/困难",
+    "similarity_level": "{similarity_level or '中'}",
+    "knowledge_tags": {knowledge_gaps}
+}}
+
+请确保所有题目都准确覆盖指定的知识漏洞，并满足难度和相似度要求。"""
 
             payload = {
                 "model": self.model,
@@ -301,44 +323,54 @@ class AIEngine:
                     return questions
 
                 except json.JSONDecodeError:
-                    print("❌ 练习题JSON解析失败，使用模拟数据")
-                    return self._generate_mock_practice_questions(knowledge_gaps, count)
+                    safe_print("❌ 练习题JSON解析失败，使用模拟数据")
+                    return self._generate_mock_practice_questions(knowledge_gaps, count, difficulty, similarity_level)
 
             else:
-                print(f"❌ 生成练习题失败: {response.status_code}")
-                return self._generate_mock_practice_questions(knowledge_gaps, count)
+                safe_print(f"❌ 生成练习题失败: {response.status_code}")
+                return self._generate_mock_practice_questions(knowledge_gaps, count, difficulty, similarity_level)
 
         except Exception as e:
-            print(f"❌ 生成练习题异常: {e}")
-            return self._generate_mock_practice_questions(knowledge_gaps, count)
+            safe_print(f"❌ 生成练习题异常: {e}")
+            return self._generate_mock_practice_questions(knowledge_gaps, count, difficulty, similarity_level)
 
-    def _generate_mock_practice_questions(self, knowledge_gaps: list, count: int = 5) -> list:
-        """生成模拟练习题（回退用）"""
+    def _generate_mock_practice_questions(self, knowledge_gaps: list, count: int = 5,
+                                         difficulty: str = None, similarity_level: str = None) -> list:
+        """生成模拟练习题（回退用），支持相似度等级"""
+        # 根据相似度等级生成不同相似度的题目
+        similarity_levels = {
+            "低": ["完全不同的形式", "不同背景", "不同参数"],
+            "中": ["相似类型", "相似方法", "不同条件"],
+            "高": ["高度相似", "相同结构", "不同数值"]
+        }
+
+        sim_desc = similarity_levels.get(similarity_level, ["相似"]) if similarity_level else ["相似"]
+
         base_questions = [
             {
-                "question": "计算定积分 ∫(0 to 1) x^3 dx",
+                "question": f"计算定积分 ∫(0 to 1) x^3 dx（{sim_desc[0]}题目）",
                 "answer": "1/4",
-                "explanation": "使用幂函数积分公式 ∫x^n dx = x^(n+1)/(n+1)"
+                "explanation": f"使用幂函数积分公式 ∫x^n dx = x^(n+1)/(n+1)，这是一个{similarity_level or '中'}相似度的题目"
             },
             {
-                "question": "求函数 f(x) = 2x^2 - 3x + 1 的导数",
+                "question": f"求函数 f(x) = 2x^2 - 3x + 1 的导数（{sim_desc[1]}题目）",
                 "answer": "f'(x) = 4x - 3",
-                "explanation": "使用幂函数求导公式 (x^n)' = n*x^(n-1)"
+                "explanation": f"使用幂函数求导公式 (x^n)' = n*x^(n-1)，这是一个{similarity_level or '中'}相似度的题目"
             },
             {
-                "question": "计算极限 lim(x→0) (e^x - 1)/x",
+                "question": f"计算极限 lim(x→0) (e^x - 1)/x（{sim_desc[2] if len(sim_desc) > 2 else sim_desc[0]}题目）",
                 "answer": "1",
-                "explanation": "使用重要极限或洛必达法则"
+                "explanation": f"使用重要极限或洛必达法则，这是一个{similarity_level or '中'}相似度的题目"
             },
             {
-                "question": "解微分方程 dy/dx = 2y",
+                "question": f"解微分方程 dy/dx = 2y（相似题目）",
                 "answer": "y = Ce^(2x)",
-                "explanation": "使用分离变量法，积分得到结果"
+                "explanation": f"使用分离变量法，积分得到结果，这是一个{similarity_level or '中'}相似度的题目"
             },
             {
-                "question": "计算矩阵 [[1,2],[3,4]] + [[5,6],[7,8]]",
+                "question": f"计算矩阵 [[1,2],[3,4]] + [[5,6],[7,8]]（相似题目）",
                 "answer": "[[6,8],[10,12]]",
-                "explanation": "矩阵加法：对应元素相加"
+                "explanation": f"矩阵加法：对应元素相加，这是一个{similarity_level or '中'}相似度的题目"
             }
         ]
 
@@ -347,17 +379,18 @@ class AIEngine:
             q = base_questions[i].copy()
             q["id"] = f"PQ{i+1:03d}"
             q["knowledge_tags"] = knowledge_gaps[:2] if knowledge_gaps else ["基础数学"]
-            q["difficulty"] = random.choice(["简单", "中等", "困难"])
+            q["difficulty"] = difficulty or random.choice(["简单", "中等", "困难"])
+            q["similarity_level"] = similarity_level or "中"
             questions.append(q)
 
         return questions
 
     def explain_concept(self, concept: str) -> Dict[str, Any]:
         """解释数学概念（真实AI解释）"""
-        print(f"📚 解释概念: {concept}")
+        safe_print(f"📚 解释概念: {concept}")
 
         if self.fallback_mode or not self.is_connected:
-            print("⚠️  AI服务未连接，使用模拟数据")
+            safe_print("⚠️  AI服务未连接，使用模拟数据")
             return self._generate_mock_concept_explanation(concept)
 
         try:
@@ -410,15 +443,15 @@ class AIEngine:
                     return explanation
 
                 except json.JSONDecodeError:
-                    print("❌ 概念解释JSON解析失败，使用模拟数据")
+                    safe_print("❌ 概念解释JSON解析失败，使用模拟数据")
                     return self._generate_mock_concept_explanation(concept)
 
             else:
-                print(f"❌ 解释概念失败: {response.status_code}")
+                safe_print(f"❌ 解释概念失败: {response.status_code}")
                 return self._generate_mock_concept_explanation(concept)
 
         except Exception as e:
-            print(f"❌ 解释概念异常: {e}")
+            safe_print(f"❌ 解释概念异常: {e}")
             return self._generate_mock_concept_explanation(concept)
 
     def _generate_mock_concept_explanation(self, concept: str) -> Dict[str, Any]:
