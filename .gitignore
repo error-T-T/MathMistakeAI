@@ -45,6 +45,7 @@ dist-ssr/
 .idea/
 *.swp
 *.swo
+.vs/
 
 # Ollama models
 models/
@@ -54,6 +55,7 @@ temp/
 tmp/
 *.tmp
 *.temp
+nul
 
 # 数据文件（示例数据除外）
 *.csv
@@ -62,3 +64,12 @@ tmp/
 # 生成的文档
 *.docx
 output/
+
+# Windows
+Thumbs.db
+Desktop.ini
+*.lnk
+
+# 开发工具
+.cache/
+*.log
