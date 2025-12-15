@@ -24,7 +24,7 @@
       "实现模型健康检查API",
       "实现带错误处理的模型调用函数"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {

@@ -5,7 +5,13 @@ GitHub ID: error-T-T
 学校邮箱: RookieT@e.gzhu.edu.cn
 """
 
+import sys
 import os
+
+# 添加当前目录到Python路径，确保可以导入本地模块
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -14,7 +20,11 @@ import uvicorn
 from dotenv import load_dotenv
 
 # 导入路由
-from routers import mistakes, ai
+try:
+    from routers import mistakes, ai
+except ImportError:
+    # 如果直接导入失败，尝试相对导入
+    from .routers import mistakes, ai
 
 # 加载环境变量
 load_dotenv(".env")

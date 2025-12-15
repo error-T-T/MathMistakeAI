@@ -5,14 +5,44 @@ GitHub ID: error-T-T
 学校邮箱: RookieT@e.gzhu.edu.cn
 """
 
+import sys
+import os
+
+# 添加父目录到Python路径，确保可以导入本地模块
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
 from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional
-from ..data_models import (
-    MistakeCreate, MistakeResponse, MistakeUpdate,
-    AnalysisRequest, AnalysisResponse, DifficultyLevel, QuestionType
-)
-from ..data_manager import CSVDataManager
-from ..ai_engine import AIEngine
+
+# 尝试多种导入方式
+try:
+    # 方式1：从backend包导入
+    from backend.data_models import (
+        MistakeCreate, MistakeResponse, MistakeUpdate,
+        AnalysisRequest, AnalysisResponse, DifficultyLevel, QuestionType
+    )
+    from backend.data_manager import CSVDataManager
+    from backend.ai_engine import AIEngine
+except ImportError:
+    try:
+        # 方式2：相对导入
+        from ..data_models import (
+            MistakeCreate, MistakeResponse, MistakeUpdate,
+            AnalysisRequest, AnalysisResponse, DifficultyLevel, QuestionType
+        )
+        from ..data_manager import CSVDataManager
+        from ..ai_engine import AIEngine
+    except ImportError:
+        # 方式3：直接导入（当作为脚本运行时）
+        from data_models import (
+            MistakeCreate, MistakeResponse, MistakeUpdate,
+            AnalysisRequest, AnalysisResponse, DifficultyLevel, QuestionType
+        )
+        from data_manager import CSVDataManager
+        from ai_engine import AIEngine
 
 router = APIRouter(prefix="/mistakes", tags=["错题管理"])
 
