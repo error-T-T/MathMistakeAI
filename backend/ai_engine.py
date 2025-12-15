@@ -8,7 +8,7 @@ GitHub ID: error-T-T
 import os
 import json
 import random
-import httpx
+import requests
 from typing import Dict, Any, Optional
 from .data_models import AnalysisRequest, AnalysisResponse
 
@@ -20,7 +20,8 @@ class AIEngine:
         self.base_url = base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
         self.model = model or os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
         self.is_connected = False
-        self.client = httpx.Client(timeout=30.0)  # 30秒超时
+        self.client = requests.Session()  # 30秒超时
+        self.client.timeout = 30.0  # 30秒超时
         self.fallback_mode = False  # 是否启用模拟回退
         self._test_connection()
 
