@@ -50,7 +50,7 @@ router = APIRouter(prefix="/mistakes", tags=["错题管理"])
 data_manager = CSVDataManager()
 ai_engine = AIEngine()
 
-@router.post("/", response_model=MistakeResponse)
+@router.post("", response_model=MistakeResponse)
 async def create_mistake(mistake: MistakeCreate):
     """创建新的错题记录"""
     try:
@@ -62,11 +62,12 @@ async def create_mistake(mistake: MistakeCreate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"创建错题失败: {str(e)}")
 
-@router.get("/", response_model=List[MistakeResponse])
+@router.get("", response_model=List[MistakeResponse])
 async def get_mistakes(
-    skip: int = Query(0, ge=0, description="跳过记录数"),
-    limit: int = Query(100, ge=1, le=1000, description="返回记录数"),
-    keyword: Optional[str] = Query(None, description="搜索关键词"),
+    page: int = Query(1, ge=1, description="页码，从1开始"),
+    page_size: int = Query(12, ge=1, le=100, description="每页记录数"),
+    search: Optional[str] = Query(None, description="搜索关键词"),
+    keyword: Optional[str] = Query(None, description="搜索关键词（兼容旧参数）"),
     tags: Optional[str] = Query(None, description="知识点标签，用逗号分隔"),
     difficulty: Optional[DifficultyLevel] = Query(None, description="难度级别")
 ):
@@ -75,15 +76,19 @@ async def get_mistakes(
         # 解析标签
         tag_list = tags.split(",") if tags else None
 
+        # 兼容性处理：优先使用search，其次使用keyword
+        search_keyword = search if search is not None else keyword
+
         # 搜索错题
         mistakes = data_manager.search_mistakes(
-            keyword=keyword,
+            keyword=search_keyword,
             tags=tag_list,
             difficulty=difficulty
         )
 
-        # 分页
-        end_idx = skip + limit
+        # 分页计算
+        skip = (page - 1) * page_size
+        end_idx = skip + page_size
         return mistakes[skip:end_idx]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取错题列表失败: {str(e)}")

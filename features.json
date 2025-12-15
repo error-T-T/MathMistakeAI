@@ -136,7 +136,7 @@
       "添加图表交互功能（悬停提示、点击筛选）",
       "设计美观的统计卡片布局"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "medium"
   },
   {
