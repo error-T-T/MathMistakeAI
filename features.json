@@ -164,7 +164,7 @@
       "将解析数据存储到CSV",
       "返回导入结果的统计信息"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {

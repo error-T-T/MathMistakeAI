@@ -44,10 +44,10 @@ from middleware.logging_middleware import LoggingMiddleware
 
 # 导入路由
 try:
-    from routers import mistakes, ai
+    from routers import mistakes, ai, imports
 except ImportError:
     # 如果直接导入失败，尝试相对导入
-    from .routers import mistakes, ai
+    from .routers import mistakes, ai, imports
 
 # 加载环境变量
 load_dotenv(".env")
@@ -93,6 +93,7 @@ app.add_middleware(LoggingMiddleware)
 # 注册路由
 app.include_router(mistakes.router, prefix="/api")
 app.include_router(ai.router, prefix="/api")
+app.include_router(imports.router, prefix="/api")
 
 # 健康检查端点
 @app.get("/")
@@ -109,7 +110,8 @@ async def root():
             "api_docs": "/docs",
             "health_check": "/health",
             "mistakes": "/api/mistakes",
-            "ai_analysis": "/api/ai"
+            "ai_analysis": "/api/ai",
+            "data_import": "/api/import"
         }
     }
 

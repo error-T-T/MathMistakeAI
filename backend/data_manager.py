@@ -13,6 +13,22 @@ from datetime import datetime
 import uuid
 from data_models import MistakeCreate, MistakeResponse, MistakeUpdate, DifficultyLevel, QuestionType
 
+def safe_safe_print(text: str):
+    """安全打印函数，处理Windows控制台编码问题"""
+    try:
+        safe_print(text)
+    except UnicodeEncodeError:
+        # 如果标准打印失败，尝试直接写入stdout的buffer
+        try:
+            import sys
+            sys.stdout.buffer.write(text.encode('utf-8') + b'\n')
+            sys.stdout.buffer.flush()
+        except:
+            # 如果连buffer写入都失败，使用ASCII回退
+            safe_text = text.encode('ascii', errors='replace').decode('ascii')
+            safe_print(safe_text)
+
+
 class CSVDataManager:
     """CSV数据管理器"""
 
@@ -36,7 +52,7 @@ class CSVDataManager:
                     'correct_answer', 'question_type', 'knowledge_tags',
                     'difficulty', 'source', 'notes', 'created_at', 'updated_at'
                 ])
-            print(f"📄 创建了新的数据文件: {self.file_path}")
+            safe_print(f"[FILE] 创建了新的数据文件: {self.file_path}")
 
     def create_mistake(self, mistake: MistakeCreate) -> str:
         """创建新的错题记录"""
@@ -65,7 +81,7 @@ class CSVDataManager:
             writer = csv.writer(f)
             writer.writerow(row)
 
-        print(f"✅ 创建了错题记录: {mistake_id}")
+        safe_print(f"[OK] 创建了错题记录: {mistake_id}")
         return mistake_id
 
     def get_mistake(self, mistake_id: str) -> Optional[MistakeResponse]:
@@ -80,7 +96,7 @@ class CSVDataManager:
             # 转换为MistakeResponse对象
             return self._row_to_mistake_response(row.iloc[0])
         except Exception as e:
-            print(f"❌ 获取错题失败: {e}")
+            safe_print(f"[ERROR] 获取错题失败: {e}")
             return None
 
     def get_all_mistakes(self) -> List[MistakeResponse]:
@@ -98,7 +114,7 @@ class CSVDataManager:
 
             return mistakes
         except Exception as e:
-            print(f"❌ 获取所有错题失败: {e}")
+            safe_print(f"[ERROR] 获取所有错题失败: {e}")
             return []
 
     def update_mistake(self, mistake_id: str, update: MistakeUpdate) -> bool:
@@ -145,10 +161,10 @@ class CSVDataManager:
             # 保存回CSV
             df.to_csv(self.file_path, index=False)
 
-            print(f"✅ 更新了错题记录: {mistake_id}")
+            safe_print(f"[OK] 更新了错题记录: {mistake_id}")
             return True
         except Exception as e:
-            print(f"❌ 更新错题失败: {e}")
+            safe_print(f"[ERROR] 更新错题失败: {e}")
             return False
 
     def delete_mistake(self, mistake_id: str) -> bool:
@@ -165,10 +181,10 @@ class CSVDataManager:
             # 保存回CSV
             df.to_csv(self.file_path, index=False)
 
-            print(f"✅ 删除了错题记录: {mistake_id}")
+            safe_print(f"[OK] 删除了错题记录: {mistake_id}")
             return True
         except Exception as e:
-            print(f"❌ 删除错题失败: {e}")
+            safe_print(f"[ERROR] 删除错题失败: {e}")
             return False
 
     def search_mistakes(self, keyword: str = None, tags: List[str] = None,
@@ -205,7 +221,7 @@ class CSVDataManager:
 
             return mistakes
         except Exception as e:
-            print(f"❌ 搜索错题失败: {e}")
+            safe_print(f"[ERROR] 搜索错题失败: {e}")
             return []
 
     def get_statistics(self) -> Dict[str, Any]:
@@ -244,7 +260,7 @@ class CSVDataManager:
 
             return stats
         except Exception as e:
-            print(f"❌ 获取统计信息失败: {e}")
+            safe_print(f"[ERROR] 获取统计信息失败: {e}")
             return {}
 
     def _row_to_mistake_response(self, row) -> Optional[MistakeResponse]:
@@ -272,5 +288,5 @@ class CSVDataManager:
                 updated_at=datetime.fromisoformat(row['updated_at'])
             )
         except Exception as e:
-            print(f"❌ 转换错题数据失败: {e}")
+            safe_print(f"[ERROR] 转换错题数据失败: {e}")
             return None

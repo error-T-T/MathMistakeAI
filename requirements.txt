@@ -1,36 +1,27 @@
-# MathMistakeAI 后端依赖
-# 核心Web框架
-fastapi==0.115.0
-uvicorn[standard]==0.34.0
-
-# 数据验证与序列化
-pydantic==2.10.0
-
-# 环境变量管理
-python-dotenv==1.0.1
-
-# HTTP请求库（用于Ollama API调用）
-requests==2.32.0
-
-# 数据处理与分析
-pandas==2.2.0
-
-# 数值计算库（可选，用于高级数学运算）
-numpy==1.26.4
-
-# 符号计算库（可选，用于数学公式处理）
-sympy==1.12
-
-# 文件操作与文档处理
-python-docx==1.1.0       # Word文档导出功能
-aiofiles==24.0.0         # 异步文件操作
-python-multipart==0.0.9  # 表单数据处理（文件上传等）
-
-# 异步HTTP客户端（备用，当前使用requests）
-httpx==0.28.0
-
-# 开发依赖（测试、代码质量等）
-# pytest==8.2.0          # 测试框架
-# pytest-asyncio==0.23.5 # 异步测试支持
-# black==24.10.0         # 代码格式化
-# ruff==0.8.4            # 代码检查与格式化
+annotated-doc==0.0.4
+annotated-types==0.7.0
+anyio==4.12.0
+certifi==2025.11.12
+charset-normalizer==3.4.4
+click==8.3.1
+colorama==0.4.6
+dotenv==0.9.9
+fastapi==0.124.4
+h11==0.16.0
+idna==3.11
+numpy==2.3.5
+pandas==2.3.3
+pydantic==2.12.5
+pydantic_core==2.41.5
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.1
+python-multipart==0.0.20
+pytz==2025.2
+requests==2.32.5
+six==1.17.0
+starlette==0.50.0
+typing-inspection==0.4.2
+typing_extensions==4.15.0
+tzdata==2025.3
+urllib3==2.6.2
+uvicorn==0.38.0
