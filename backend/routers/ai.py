@@ -17,20 +17,11 @@ if parent_dir not in sys.path:
 from fastapi import APIRouter, HTTPException, Query
 from typing import List
 
-# 尝试多种导入方式
-try:
-    # 方式1：从backend包导入
-    from backend.ai_engine import AIEngine
-    from backend.data_models import AnalysisRequest, AnalysisResponse
-except ImportError:
-    try:
-        # 方式2：相对导入
-        from ..ai_engine import AIEngine
-        from ..data_models import AnalysisRequest, AnalysisResponse
-    except ImportError:
-        # 方式3：直接导入（当作为脚本运行时）
-        from ai_engine import AIEngine
-        from data_models import AnalysisRequest, AnalysisResponse
+# 直接导入（已设置sys.path）
+from ai_engine import AIEngine
+from data_models import AnalysisRequest, AnalysisResponse
+
+router = APIRouter(prefix="/ai", tags=["AI分析"])
 
 router = APIRouter(prefix="/ai", tags=["AI分析"])
 

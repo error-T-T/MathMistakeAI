@@ -17,32 +17,13 @@ if parent_dir not in sys.path:
 from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional
 
-# 尝试多种导入方式
-try:
-    # 方式1：从backend包导入
-    from backend.data_models import (
-        MistakeCreate, MistakeResponse, MistakeUpdate,
-        AnalysisRequest, AnalysisResponse, DifficultyLevel, QuestionType
-    )
-    from backend.data_manager import CSVDataManager
-    from backend.ai_engine import AIEngine
-except ImportError:
-    try:
-        # 方式2：相对导入
-        from ..data_models import (
-            MistakeCreate, MistakeResponse, MistakeUpdate,
-            AnalysisRequest, AnalysisResponse, DifficultyLevel, QuestionType
-        )
-        from ..data_manager import CSVDataManager
-        from ..ai_engine import AIEngine
-    except ImportError:
-        # 方式3：直接导入（当作为脚本运行时）
-        from data_models import (
-            MistakeCreate, MistakeResponse, MistakeUpdate,
-            AnalysisRequest, AnalysisResponse, DifficultyLevel, QuestionType
-        )
-        from data_manager import CSVDataManager
-        from ai_engine import AIEngine
+# 直接导入（已设置sys.path）
+from data_models import (
+    MistakeCreate, MistakeResponse, MistakeUpdate,
+    AnalysisRequest, AnalysisResponse, DifficultyLevel, QuestionType
+)
+from data_manager import CSVDataManager
+from ai_engine import AIEngine
 
 router = APIRouter(prefix="/mistakes", tags=["错题管理"])
 

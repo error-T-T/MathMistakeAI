@@ -11,6 +11,10 @@ import os
 # 添加当前目录到Python路径，确保可以导入本地模块
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, current_dir)
+# 添加父目录（项目根目录）到Python路径，确保可以导入backend模块
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware

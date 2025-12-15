@@ -211,3 +211,82 @@
   3. 继续实现be-002数据导入API或be-003错题分析API
   4. 解决前端TypeScript编译错误，完善开发体验
 - 项目状态：全栈项目核心功能就绪。后端完整运行，AI集成正常，日志系统就绪。前端界面完整，仅剩数据连接和类型错误修复。具备完整的开发、测试和部署基础。
+
+## 会话 2025-12-15 (问题诊断)
+- **用户报告问题**: 网页点击除了首页之外的东西都是纯黑的，然后点击只会闪白
+- **环境检查**: 项目结构完整，前端功能fe-001到fe-007已通过，后端和AI功能大多未通过
+- **诊断过程**:
+  1. 检查了主题上下文(ThemeContext.tsx) - 正常
+  2. 检查了全局CSS(globals.css)和Tailwind配置 - 正常
+  3. 检查了Layout组件和路由配置 - 正常
+  4. 启动了前端开发服务器 (http://localhost:5173) - 成功
+  5. 尝试启动后端服务器 - 遇到Python导入错误 (相对导入问题)
+  6. 测试页面HTTP访问 - 返回相同HTML，`<html class="dark">`主题为dark
+- **问题分析**:
+  - 前端服务器运行正常，页面基础HTML加载成功
+  - 后端导入错误需要修复 (ModuleNotFoundError: No module named 'backend')
+  - 页面纯黑可能原因:
+    * CSS主题类应用问题 (dark模式导致背景黑色，文字颜色可能也是深色)
+    * JavaScript路由渲染失败，但首页正常说明基础路由工作
+    * 可能UI组件导入错误或API调用失败导致页面渲染异常
+- **已采取行动**:
+  - 提交了ThemeContext.tsx的修改
+  - 记录了当前状态和诊断结果
+- **下一步建议**:
+  1. 优先修复后端导入错误 (修改data_manager.py和routers中的相对导入)
+  2. 启动后端服务器，确保API可用
+  3. 使用浏览器开发者工具检查控制台错误和网络请求
+  4. 检查Tailwind dark模式CSS变量是否正确应用
+  5. 验证页面组件是否正常渲染，检查UI组件导出
+- **项目状态**:
+  - 前端: 开发服务器可启动，页面基础HTML加载
+  - 后端: 存在导入错误，需要修复
+  - 问题根源: 疑似CSS主题应用或JavaScript渲染问题，需要进一步调试
+
+## 会话 2025-12-15 (修复后端导入错误)
+- **已修复**:
+  1. routers/mistakes.py: 简化导入逻辑，使用直接导入 `from data_models` 和 `from data_manager`
+  2. main.py: 增强Python路径设置，添加项目根目录到sys.path
+- **遇到问题**:
+  - data_manager.py 和 ai_engine.py 文件被系统锁定，无法编辑（"File has been unexpectedly modified"错误）
+  - 可能原因: 防病毒软件、文件索引服务或其他进程占用
+  - Bash命令执行需要用户批准，无法启动服务器测试
+- **部分修复完成**:
+  - 后端导入错误部分解决，但关键文件(data_manager.py)的`.data_models`相对导入仍需修复
+  - routers/mistakes.py 和 main.py 的修复应能改善导入问题
+- **下一步手动操作**:
+  1. 检查并关闭可能锁定文件的进程（防病毒软件、IDE等）
+  2. 手动修改 `backend/data_manager.py` 第14行: `from .data_models` → `from data_models`
+  3. 手动修改 `backend/ai_engine.py` 第14行: `from .data_models` → `from data_models`
+  4. 手动修改 `backend/routers/ai.py` 第20-33行: 简化导入逻辑（参考mistakes.py的修复）
+  5. 启动后端测试: `cd backend && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000`
+  6. 启动前端测试: `cd frontend && npm run dev`
+  7. 访问 http://localhost:5173 测试页面显示问题
+- **项目状态**:
+  - 前端: 开发服务器可启动，页面基础HTML加载正常
+  - 后端: 导入错误部分修复，关键文件锁定需手动解决
+  - 页面显示问题: 待后端修复后进一步调试CSS主题和JavaScript渲染
+
+## 会话 2025-12-15 (前端React错误诊断)
+- **发现的关键错误**: 浏览器控制台显示React渲染错误
+  - 错误: "Warning: React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: <Brain />. Did you accidentally export a JSX literal instead of a component?"
+  - 位置: Alert组件渲染失败，影响GeneratePage页面
+  - 根本原因: Alert组件的`icon` prop期望接收组件类/函数，但使用处传递了JSX元素（如`<AlertCircle className="h-4 w-4" />`）
+- **影响范围**:
+  - GeneratePage: 第106行和第325行的Alert使用
+  - MistakeDetailPage: 第497行和第542行
+  - MistakesPage: 第254行
+- **修复方案**:
+  1. 修改Alert组件，正确处理JSX元素类型的icon prop
+  2. 或修改所有使用处，传递组件类而不是JSX元素
+- **当前阻碍**: 前端开发服务器运行中，相关文件被锁定无法编辑（"File has been unexpectedly modified"错误）
+- **用户原问题分析**: "网页点击除了首页之外的东西都是纯黑的，然后点击只会闪白" - 很可能是因为JavaScript渲染错误导致页面内容无法显示
+- **下一步手动操作**:
+  1. 停止前端开发服务器进程
+  2. 修复Alert组件或相关使用处的icon prop传递方式
+  3. 重启前端服务器测试修复
+
+--- 签名 ---
+Rookie & 艾可希雅
+GitHub: error-T-T
+邮箱: RookieT@e.gzhu.edu.cn

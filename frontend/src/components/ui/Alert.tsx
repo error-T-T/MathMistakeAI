@@ -38,7 +38,7 @@ interface AlertProps
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
   ({ className, variant, title, icon, children, ...props }, ref) => {
-    const Icon = icon || iconMap[variant || 'default']
+    const DefaultIcon = iconMap[variant || 'default']
 
     return (
       <div
@@ -49,7 +49,11 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
       >
         <div className="flex items-start">
           <div className="flex-shrink-0">
-            <Icon className="h-5 w-5 mt-0.5" />
+            {React.isValidElement(icon) ? (
+              <div className="h-5 w-5 mt-0.5">{icon}</div>
+            ) : (
+              React.createElement(DefaultIcon, { className: "h-5 w-5 mt-0.5" })
+            )}
           </div>
           <div className="ml-3 flex-1">
             {title && (

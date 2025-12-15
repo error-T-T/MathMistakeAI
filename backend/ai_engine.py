@@ -11,7 +11,7 @@ import json
 import random
 import requests
 from typing import Dict, Any, Optional
-from .data_models import AnalysisRequest, AnalysisResponse
+from data_models import AnalysisRequest, AnalysisResponse
 
 def safe_print(text: str):
     """安全打印函数，处理Windows控制台编码问题"""

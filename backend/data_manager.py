@@ -11,7 +11,7 @@ import pandas as pd
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import uuid
-from .data_models import MistakeCreate, MistakeResponse, MistakeUpdate, DifficultyLevel, QuestionType
+from data_models import MistakeCreate, MistakeResponse, MistakeUpdate, DifficultyLevel, QuestionType
 
 class CSVDataManager:
     """CSV数据管理器"""
