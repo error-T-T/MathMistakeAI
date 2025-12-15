@@ -1,0 +1,131 @@
+"""
+错题管理API路由
+作者: Rookie (error-T-T) & 艾可希雅
+GitHub ID: error-T-T
+学校邮箱: RookieT@e.gzhu.edu.cn
+"""
+
+from fastapi import APIRouter, HTTPException, Query, Depends
+from typing import List, Optional
+from ..data_models import (
+    MistakeCreate, MistakeResponse, MistakeUpdate,
+    AnalysisRequest, AnalysisResponse, DifficultyLevel, QuestionType
+)
+from ..data_manager import CSVDataManager
+from ..ai_engine import AIEngine
+
+router = APIRouter(prefix="/mistakes", tags=["错题管理"])
+
+# 初始化数据管理器和AI引擎
+data_manager = CSVDataManager()
+ai_engine = AIEngine()
+
+@router.post("/", response_model=MistakeResponse)
+async def create_mistake(mistake: MistakeCreate):
+    """创建新的错题记录"""
+    try:
+        mistake_id = data_manager.create_mistake(mistake)
+        created_mistake = data_manager.get_mistake(mistake_id)
+        if not created_mistake:
+            raise HTTPException(status_code=500, detail="创建错题后无法获取记录")
+        return created_mistake
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"创建错题失败: {str(e)}")
+
+@router.get("/", response_model=List[MistakeResponse])
+async def get_mistakes(
+    skip: int = Query(0, ge=0, description="跳过记录数"),
+    limit: int = Query(100, ge=1, le=1000, description="返回记录数"),
+    keyword: Optional[str] = Query(None, description="搜索关键词"),
+    tags: Optional[str] = Query(None, description="知识点标签，用逗号分隔"),
+    difficulty: Optional[DifficultyLevel] = Query(None, description="难度级别")
+):
+    """获取错题列表"""
+    try:
+        # 解析标签
+        tag_list = tags.split(",") if tags else None
+
+        # 搜索错题
+        mistakes = data_manager.search_mistakes(
+            keyword=keyword,
+            tags=tag_list,
+            difficulty=difficulty
+        )
+
+        # 分页
+        end_idx = skip + limit
+        return mistakes[skip:end_idx]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取错题列表失败: {str(e)}")
+
+@router.get("/{mistake_id}", response_model=MistakeResponse)
+async def get_mistake(mistake_id: str):
+    """根据ID获取错题详情"""
+    mistake = data_manager.get_mistake(mistake_id)
+    if not mistake:
+        raise HTTPException(status_code=404, detail="错题不存在")
+    return mistake
+
+@router.put("/{mistake_id}", response_model=MistakeResponse)
+async def update_mistake(mistake_id: str, update: MistakeUpdate):
+    """更新错题记录"""
+    success = data_manager.update_mistake(mistake_id, update)
+    if not success:
+        raise HTTPException(status_code=404, detail="错题不存在或更新失败")
+
+    updated_mistake = data_manager.get_mistake(mistake_id)
+    if not updated_mistake:
+        raise HTTPException(status_code=500, detail="更新后无法获取错题")
+
+    return updated_mistake
+
+@router.delete("/{mistake_id}")
+async def delete_mistake(mistake_id: str):
+    """删除错题记录"""
+    success = data_manager.delete_mistake(mistake_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="错题不存在或删除失败")
+    return {"message": "错题删除成功", "mistake_id": mistake_id}
+
+@router.post("/{mistake_id}/analyze", response_model=AnalysisResponse)
+async def analyze_mistake(mistake_id: str):
+    """AI分析错题"""
+    # 先获取错题信息
+    mistake = data_manager.get_mistake(mistake_id)
+    if not mistake:
+        raise HTTPException(status_code=404, detail="错题不存在")
+
+    # 创建分析请求
+    request = AnalysisRequest(
+        mistake_id=mistake_id,
+        question_content=mistake.question_content,
+        wrong_process=mistake.wrong_process,
+        wrong_answer=mistake.wrong_answer,
+        correct_answer=mistake.correct_answer
+    )
+
+    # 调用AI引擎分析
+    try:
+        analysis = ai_engine.analyze_mistake(request)
+        return analysis
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI分析失败: {str(e)}")
+
+@router.get("/stats/summary")
+async def get_statistics():
+    """获取错题统计摘要"""
+    try:
+        stats = data_manager.get_statistics()
+        return stats
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取统计信息失败: {str(e)}")
+
+@router.get("/types/list")
+async def get_question_types():
+    """获取所有题目类型"""
+    return [{"value": t.value, "name": t.name} for t in QuestionType]
+
+@router.get("/difficulty/list")
+async def get_difficulty_levels():
+    """获取所有难度级别"""
+    return [{"value": d.value, "name": d.name} for d in DifficultyLevel]
