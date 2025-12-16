@@ -66,3 +66,23 @@ Notes
 - Commits: (Pending)
 - Blockers: None
 - Next steps: Mark `ai-001` as done, integrate into AI engine, and start `ai-002`.
+
+## Session 2025-12-16 09:45
+- Owner: GitHub Copilot
+- Completed:
+  - Marked `ai-001` as passed in `features.json`.
+  - Committed implementation of NLP feature extraction.
+- Files changed: `features.json`, `claude-progress.txt`
+- Commits: `29200ed`
+- Blockers: None
+- Next steps: Implement `ai-002` (Prompt Engineering Templates).
+
+## Session 2025-12-16 09:50
+- Owner: GitHub Copilot
+- Completed:
+  - Restored `AItips_001.txt`.
+  - Diagnosed backend startup: Manual start works, launcher detection might be the issue.
+- Files changed: `AItips_001.txt`, `claude-progress.txt`
+- Commits: (Pending)
+- Blockers: Launcher health check might be flaky.
+- Next steps: Fix launcher health check or proceed to `ai-002`.

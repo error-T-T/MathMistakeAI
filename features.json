@@ -248,7 +248,7 @@
       "实现模板变量替换系统",
       "测试提示词效果并优化"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {
