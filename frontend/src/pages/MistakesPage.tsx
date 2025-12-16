@@ -1,16 +1,15 @@
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Search, Filter, Edit, Trash2, Eye, Plus, Loader2, AlertCircle } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Search, Filter, Plus, Loader2, AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { mistakesApi } from '../services/api'
-import { DifficultyLevel, QuestionType, MistakeResponse, PaginationParams } from '../types'
+import { DifficultyLevel, QuestionType, MistakeResponse } from '../types'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
-import { Badge } from '../components/ui/Badge'
 import { Alert } from '../components/ui/Alert'
 import { Dialog } from '../components/ui/Dialog'
 import { Skeleton } from '../components/ui/Skeleton'
+import MistakeCard from '../components/MistakeCard'
 
 const MistakesPage = () => {
   // 状态管理
@@ -127,105 +126,6 @@ const MistakesPage = () => {
     setSelectedTag('')
     setCurrentPage(1)
   }
-
-  // 渲染难度徽章颜色
-  const getDifficultyColor = (difficulty: DifficultyLevel) => {
-    switch (difficulty) {
-      case DifficultyLevel.EASY: return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-      case DifficultyLevel.MEDIUM: return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-      case DifficultyLevel.HARD: return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300'
-      case DifficultyLevel.EXPERT: return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
-    }
-  }
-
-  // 渲染错题卡片
-  const renderMistakeCard = (mistake: MistakeResponse) => (
-    <motion.div
-      key={mistake.id}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="h-full"
-    >
-      <Card className="h-full hover:shadow-lg transition-shadow duration-300">
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-lg line-clamp-1">
-                {mistake.question_content.substring(0, 50)}
-                {mistake.question_content.length > 50 ? '...' : ''}
-              </CardTitle>
-              <CardDescription className="mt-1">
-                {mistake.question_type}
-              </CardDescription>
-            </div>
-            <Badge className={getDifficultyColor(mistake.difficulty)}>
-              {mistake.difficulty}
-            </Badge>
-          </div>
-        </CardHeader>
-
-        <CardContent>
-          <div className="space-y-3">
-            <div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">知识点标签</p>
-              <div className="flex flex-wrap gap-1">
-                {mistake.knowledge_tags.map(tag => (
-                  <Badge key={tag} variant="outline" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">错误答案</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                {mistake.wrong_answer}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">正确答案</p>
-              <p className="text-sm text-gray-900 dark:text-gray-100 font-medium">
-                {mistake.correct_answer}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-
-        <CardFooter className="flex justify-between border-t pt-4">
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            创建于 {new Date(mistake.created_at).toLocaleDateString()}
-          </div>
-          <div className="flex gap-2">
-            <Link to={`/mistakes/${mistake.id}`}>
-              <Button size="sm" variant="outline">
-                <Eye className="h-3 w-3 mr-1" />
-                详情
-              </Button>
-            </Link>
-            <Link to={`/mistakes/${mistake.id}?edit=true`}>
-              <Button size="sm" variant="outline">
-                <Edit className="h-3 w-3 mr-1" />
-                编辑
-              </Button>
-            </Link>
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-red-600 hover:text-red-700"
-              onClick={() => openDeleteDialog(mistake.id)}
-            >
-              <Trash2 className="h-3 w-3 mr-1" />
-              删除
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
-    </motion.div>
-  )
 
   // 渲染加载骨架屏
   const renderSkeletons = () => (
@@ -382,7 +282,13 @@ const MistakesPage = () => {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mistakes.map(renderMistakeCard)}
+            {mistakes.map(mistake => (
+              <MistakeCard
+                key={mistake.id}
+                mistake={mistake}
+                onDelete={openDeleteDialog}
+              />
+            ))}
           </div>
 
           {/* 分页控件 */}

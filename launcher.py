@@ -22,6 +22,7 @@ import signal
 import atexit
 import platform
 import webbrowser
+import shutil
 from typing import Optional, List, Tuple
 import socket
 import requests
@@ -328,14 +329,43 @@ class ServiceManager:
             Logger.error(f"package.json不存在: {package_json}")
             return False
 
+        # 检查node_modules是否已经存在
+        node_modules_dir = os.path.join(frontend_dir, "node_modules")
+        if os.path.exists(node_modules_dir):
+            Logger.info("前端依赖已存在，跳过安装")
+            return True
+
+        # 检查npm是否可用
+        npm_path = shutil.which("npm")
+        if not npm_path:
+            Logger.warning("npm未找到，尝试使用npx...")
+            npm_cmd = ["npx"]
+        else:
+            npm_cmd = ["npm"]
+
         Logger.info("安装前端依赖...")
         try:
             os.chdir(frontend_dir)
-            subprocess.run(["npm", "install"], check=True, capture_output=True)
+            # 使用npm或npx安装依赖
+            cmd = npm_cmd + ["install"]
+            Logger.info(f"运行命令: {' '.join(cmd)}")
+
+            result = subprocess.run(cmd, capture_output=True, text=True)
             os.chdir("..")
-            Logger.success("前端依赖安装完成")
-            return True
-        except subprocess.CalledProcessError as e:
+
+            if result.returncode == 0:
+                Logger.success("前端依赖安装完成")
+                return True
+            else:
+                Logger.warning(f"前端依赖安装可能有问题: {result.stderr[:200]}")
+                # 检查是否至少安装了部分依赖
+                if os.path.exists(node_modules_dir):
+                    Logger.success("前端依赖已部分安装，继续启动...")
+                    return True
+                else:
+                    Logger.error("前端依赖安装失败")
+                    return False
+        except Exception as e:
             Logger.error(f"安装前端依赖失败: {e}")
             os.chdir("..")
             return False

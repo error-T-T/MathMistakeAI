@@ -130,13 +130,18 @@ npm install || { echo "❌ 前端依赖安装失败"; exit 1; }
 # 返回项目根目录
 cd ..
 
-# 初始化Git仓库
-echo "📚 初始化Git仓库..."
-git init || { echo "❌ Git初始化失败"; exit 1; }
+# 初始化Git仓库（如果尚未初始化）
+if [ -d ".git" ]; then
+    echo "📚 Git仓库已存在，跳过 git init"
+else
+    echo "📚 初始化Git仓库..."
+    git init || { echo "❌ Git初始化失败"; exit 1; }
+fi
 
-# 创建.gitignore
-echo "📄 创建.gitignore..."
-cat > .gitignore << EOF
+# 创建.gitignore（如果不存在）
+if [ ! -f ".gitignore" ]; then
+  echo "📄 创建.gitignore..."
+  cat > .gitignore << EOF
 # Python
 venv/
 __pycache__/
@@ -202,10 +207,12 @@ tmp/
 *.docx
 output/
 EOF
+fi
 
-# 创建claude-progress.txt
-echo "📝 创建进度跟踪文件..."
-cat > claude-progress.txt << 'EOF'
+# 创建claude-progress.txt（如果不存在）
+if [ ! -f "claude-progress.txt" ]; then
+  echo "📝 创建进度跟踪文件..."
+  cat > claude-progress.txt << 'EOF'
 # MathMistakeAI 项目进度跟踪
 ## 项目初始化完成 - 2025-12-15
 
@@ -236,12 +243,14 @@ cat > claude-progress.txt << 'EOF'
 - 端到端测试
 
 EOF
+else
+  echo "📝 claude-progress.txt 已存在，保留当前内容"
+fi
 
-# 创建基础配置文件
-echo "⚙️  创建基础配置文件..."
-
-# 创建后端.env文件
-cat > backend/.env.example << EOF
+# 创建基础配置文件（仅在目标文件不存在时创建）
+if [ ! -f "backend/.env.example" ]; then
+  echo "⚙️  创建基础配置文件..."
+  cat > backend/.env.example << EOF
 # Ollama配置
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=qwen2.5:7b-instruct
@@ -255,17 +264,20 @@ DEBUG=true
 DATA_FILE_PATH=data/mistakes.csv
 SAMPLE_DATA_PATH=sample_data/math_mistakes_sample.txt
 EOF
+fi
 
-# 创建前端配置文件
-cat > frontend/.env.example << EOF
+if [ ! -f "frontend/.env.example" ]; then
+  cat > frontend/.env.example << EOF
 VITE_API_BASE_URL=http://localhost:8000/api
 VITE_APP_NAME=MathMistakeAI
 VITE_APP_VERSION=1.0.0
 EOF
+fi
 
-# 创建示例数据文件
-echo "📊 创建示例数据文件..."
-cat > sample_data/math_mistakes_sample.txt << 'EOF'
+# 创建示例数据文件（如果不存在）
+if [ ! -f "sample_data/math_mistakes_sample.txt" ]; then
+  echo "📊 创建示例数据文件..."
+  cat > sample_data/math_mistakes_sample.txt << 'EOF'
 [题目ID] Q001
 [题目类型] 计算题
 [题目内容] 计算∫(0 to 1) x^2 dx
@@ -311,8 +323,10 @@ cat > sample_data/math_mistakes_sample.txt << 'EOF'
 [知识点标签] 微分方程, 不定积分
 [难度等级] 简单
 EOF
-
-echo "✅ 创建了5个示例错题"
+  echo "✅ 创建了5个示例错题"
+else
+  echo "📊 示例数据已存在，跳过创建"
+fi
 
 # 设置脚本执行权限
 chmod +x init.sh
