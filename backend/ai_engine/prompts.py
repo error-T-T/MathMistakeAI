@@ -75,11 +75,28 @@ Please output in the following structure:
 3. **Summary**: Review key points and common pitfalls.
 """
 
+    # Solution Summary Generation Template
+    SOLUTION_SUMMARY_GENERATION = """
+Please generate a general solution summary (methodology) for the following type of math problems:
+
+[Problem Type/Topic]
+${topic}
+
+[Key Concepts]
+${concepts}
+
+Please output in the following structure:
+1. **Core Method**: The standard approach to solve this type of problem.
+2. **Key Formulas**: Important formulas to remember.
+3. **Common Tricks**: Useful tricks or shortcuts.
+"""
+
     def __init__(self):
         self.templates: Dict[str, Template] = {
             "mistake_analysis": Template(self.MISTAKE_ANALYSIS),
             "similar_question_generation": Template(self.SIMILAR_QUESTION_GENERATION),
-            "explanation_generation": Template(self.EXPLANATION_GENERATION)
+            "explanation_generation": Template(self.EXPLANATION_GENERATION),
+            "solution_summary_generation": Template(self.SOLUTION_SUMMARY_GENERATION)
         }
 
     def render(self, template_name: str, **kwargs) -> str:

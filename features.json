@@ -262,7 +262,7 @@
       "实现题目变体生成",
       "生成学习建议"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {

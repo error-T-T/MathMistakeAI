@@ -86,3 +86,15 @@ Notes
 - Commits: (Pending)
 - Blockers: Launcher health check might be flaky.
 - Next steps: Fix launcher health check or proceed to `ai-002`.
+
+## Session 2025-12-16 10:15
+- Owner: GitHub Copilot
+- Completed:
+  - Implemented `ai-002` (Prompt Engineering Templates).
+  - Refactored `backend/ai_engine` to package structure.
+  - Fixed encoding issues by switching to English templates/comments.
+  - Passed all tests for prompt manager.
+- Files changed: `backend/ai_engine/prompts.py`, `backend/ai_engine/__init__.py`, `backend/tests/test_prompts.py`, `features.json`
+- Commits: `958cf78`
+- Blockers: None
+- Next steps: Implement `ai-003` and integrate PromptManager into AIEngine.

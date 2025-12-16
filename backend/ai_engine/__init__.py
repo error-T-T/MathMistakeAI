@@ -11,9 +11,10 @@ import sys
 import json
 import random
 import requests
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 # Use absolute import assuming 'backend' is a package in python path
 from backend.data_models import AnalysisRequest, AnalysisResponse
+from backend.ai_engine.prompts import PromptManager
 
 def safe_print(text: str):
     """Safe print function for Windows console encoding issues"""
@@ -36,6 +37,7 @@ class AIEngine:
         self.client = requests.Session()  # 30s timeout
         self.client.timeout = 30.0
         self.fallback_mode = False  # Enable mock fallback
+        self.prompt_manager = PromptManager()
         self._test_connection()
 
     def _test_connection(self):
@@ -70,6 +72,44 @@ class AIEngine:
             safe_print("Using mock mode")
             self.is_connected = False
             self.fallback_mode = True
+
+    def _call_ollama(self, system_prompt: str, user_prompt: str, json_mode: bool = False) -> Optional[str]:
+        """Helper method to call Ollama API"""
+        if self.fallback_mode or not self.is_connected:
+            return None
+
+        try:
+            payload = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "stream": False,
+                "options": {
+                    "temperature": 0.3,
+                    "top_p": 0.9
+                }
+            }
+            
+            if json_mode:
+                payload["format"] = "json"
+
+            response = self.client.post(
+                f"{self.base_url}/api/chat",
+                json=payload,
+                timeout=60.0
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                return result.get("message", {}).get("content", "")
+            else:
+                safe_print(f"Ollama API request failed: {response.status_code}")
+                return None
+        except Exception as e:
+            safe_print(f"Exception during AI call: {e}")
+            return None
 
     def _generate_mock_analysis(self, request: AnalysisRequest) -> AnalysisResponse:
         """Generate mock analysis (fallback)"""
@@ -132,59 +172,22 @@ class AIEngine:
             return self._generate_mock_analysis(request)
 
         try:
-            # Construct system prompt
-            system_prompt = """You are a professional math education AI assistant, specializing in analyzing student math mistakes.
-Please generate a detailed analysis report based on the provided mistake information, strictly following this JSON format:
-
-{
-    "error_type": "Error type classification (e.g., Concept Misunderstanding, Calculation Error)",
-    "root_cause": "Root cause analysis",
-    "knowledge_gap": ["Knowledge Gap 1", "Knowledge Gap 2"],
-    "learning_suggestions": ["Learning Suggestion 1", "Learning Suggestion 2"],
-    "similar_examples": ["Similar Example 1", "Similar Example 2"],
-    "confidence_score": 0.85
-}
-
-Ensure confidence_score is between 0.7-0.95."""
-
-            # Construct user message
-            user_message = f"""Please analyze the following math mistake:
-
-Question: {request.question_content}
-Wrong Process: {request.wrong_process}
-Wrong Answer: {request.wrong_answer}
-Correct Answer: {request.correct_answer}
-
-Please strictly return the analysis result in the JSON format above."""
-
-            # Construct Ollama API request
-            payload = {
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_message}
-                ],
-                "stream": False,
-                "format": "json",
-                "options": {
-                    "temperature": 0.3,
-                    "top_p": 0.9
-                }
-            }
+            # Use PromptManager to render prompt
+            user_prompt = self.prompt_manager.render(
+                "mistake_analysis",
+                question_content=request.question_content,
+                wrong_answer=request.wrong_answer,
+                wrong_process=request.wrong_process,
+                correct_answer=request.correct_answer
+            )
+            
+            system_prompt = "You are a professional math education AI assistant."
 
             safe_print(f"Sending AI analysis request, Mistake ID: {request.mistake_id}")
 
-            # Send request to Ollama
-            response = self.client.post(
-                f"{self.base_url}/api/chat",
-                json=payload,
-                timeout=60.0
-            )
+            content = self._call_ollama(system_prompt, user_prompt, json_mode=True)
 
-            if response.status_code == 200:
-                result = response.json()
-                content = result.get("message", {}).get("content", "")
-
+            if content:
                 # Try to parse JSON response
                 try:
                     if "```json" in content:
@@ -215,10 +218,7 @@ Please strictly return the analysis result in the JSON format above."""
                     safe_print(f"Raw response: {content[:200]}...")
                     safe_print("Using mock analysis as fallback")
                     return self._generate_mock_analysis(request)
-
             else:
-                safe_print(f"Ollama API request failed: {response.status_code}")
-                safe_print(f"Response: {response.text}")
                 safe_print("Using mock analysis as fallback")
                 return self._generate_mock_analysis(request)
 
@@ -231,10 +231,48 @@ Please strictly return the analysis result in the JSON format above."""
                                    difficulty: str = None, similarity_level: str = None) -> list:
         """Generate similar practice questions (Real AI Generation)"""
         safe_print(f"Generating {count} practice questions for knowledge gaps {knowledge_gaps}")
-        safe_print(f"Params: difficulty={difficulty}, similarity_level={similarity_level}")
+        
+        if self.fallback_mode or not self.is_connected:
+            return self._generate_mock_practice_questions(knowledge_gaps, count, difficulty, similarity_level)
 
-        safe_print("Temporarily using mock data (debugging)")
-        return self._generate_mock_practice_questions(knowledge_gaps, count, difficulty, similarity_level)
+        try:
+            user_prompt = self.prompt_manager.render(
+                "similar_question_generation",
+                count=count,
+                question_content="N/A (Generating based on knowledge tags)",
+                knowledge_tags=", ".join(knowledge_gaps),
+                difficulty=difficulty or "Medium",
+                similarity_level=similarity_level or "medium"
+            )
+            
+            system_prompt = "You are a math teacher generating practice questions."
+            
+            content = self._call_ollama(system_prompt, user_prompt, json_mode=True)
+            
+            if content:
+                try:
+                    if "```json" in content:
+                        start_idx = content.find("```json") + 7
+                        end_idx = content.find("```", start_idx)
+                        json_str = content[start_idx:end_idx].strip()
+                    elif "```" in content:
+                        start_idx = content.find("```") + 3
+                        end_idx = content.find("```", start_idx)
+                        json_str = content[start_idx:end_idx].strip()
+                    else:
+                        json_str = content.strip()
+                        
+                    questions = json.loads(json_str)
+                    return questions
+                except Exception as e:
+                    safe_print(f"JSON parse failed for questions: {e}")
+                    return self._generate_mock_practice_questions(knowledge_gaps, count, difficulty, similarity_level)
+            else:
+                return self._generate_mock_practice_questions(knowledge_gaps, count, difficulty, similarity_level)
+                
+        except Exception as e:
+            safe_print(f"Exception generating questions: {e}")
+            return self._generate_mock_practice_questions(knowledge_gaps, count, difficulty, similarity_level)
 
     def _generate_mock_practice_questions(self, knowledge_gaps: list, count: int = 5,
                                          difficulty: str = None, similarity_level: str = None) -> list:
@@ -310,27 +348,10 @@ Return JSON format:
     "example": "Example",
     "note": "Note"
 }}"""
+            
+            content = self._call_ollama(system_prompt, user_message, json_mode=True)
 
-            payload = {
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_message}
-                ],
-                "stream": False,
-                "format": "json"
-            }
-
-            response = self.client.post(
-                f"{self.base_url}/api/chat",
-                json=payload,
-                timeout=30.0
-            )
-
-            if response.status_code == 200:
-                result = response.json()
-                content = result.get("message", {}).get("content", "")
-
+            if content:
                 try:
                     json_str = content
                     if "```json" in content:
@@ -351,7 +372,7 @@ Return JSON format:
                     return self._generate_mock_concept_explanation(concept)
 
             else:
-                safe_print(f"Explain concept failed: {response.status_code}")
+                safe_print(f"Explain concept failed")
                 return self._generate_mock_concept_explanation(concept)
 
         except Exception as e:
@@ -397,14 +418,39 @@ Return JSON format:
                 "note": "This is mock data, real usage requires AI model generation"
             }
 
-    def health_check(self) -> Dict[str, Any]:
-        """AI Engine Health Check"""
-        return {
-            "service": "MathMistakeAI AI Engine",
-            "status": "healthy" if self.is_connected else "degraded",
-            "model": self.model,
-            "base_url": self.base_url,
-            "connected": self.is_connected,
-            "mode": "real" if self.is_connected and not self.fallback_mode else "mock",
-            "message": "Connected to real AI service" if self.is_connected and not self.fallback_mode else "Running in mock mode"
-        }
+    def generate_explanation(self, question_content: str) -> str:
+        """Generate step-by-step explanation"""
+        if self.fallback_mode or not self.is_connected:
+            return "Mock Explanation: 1. Analyze problem. 2. Apply formula. 3. Calculate result."
+
+        try:
+            user_prompt = self.prompt_manager.render(
+                "explanation_generation",
+                question_content=question_content
+            )
+            system_prompt = "You are a helpful math tutor."
+            
+            content = self._call_ollama(system_prompt, user_prompt)
+            return content or "Failed to generate explanation."
+        except Exception as e:
+            safe_print(f"Error generating explanation: {e}")
+            return "Error generating explanation."
+
+    def generate_solution_summary(self, topic: str, concepts: str) -> str:
+        """Generate solution summary"""
+        if self.fallback_mode or not self.is_connected:
+            return f"Mock Summary for {topic}: Use standard methods for {concepts}."
+
+        try:
+            user_prompt = self.prompt_manager.render(
+                "solution_summary_generation",
+                topic=topic,
+                concepts=concepts
+            )
+            system_prompt = "You are a math expert summarizing solution methods."
+            
+            content = self._call_ollama(system_prompt, user_prompt)
+            return content or "Failed to generate summary."
+        except Exception as e:
+            safe_print(f"Error generating summary: {e}")
+            return "Error generating summary."

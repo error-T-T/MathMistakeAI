@@ -479,3 +479,16 @@ GitHub: error-T-T
   2. 尝试增加 `launcher.py` 的等待超时时间。
   3. 开始 `ai-002` (提示词工程模板)。
 - 项目状态：后端服务本身是健康的。
+
+## 会话 2025-12-16 10:15
+- 接管者: GitHub Copilot
+- 已做变更：
+  - 实现了 `ai-002` (提示词工程模板设计)，创建了 `backend/ai_engine/prompts.py`。
+  - 重构了 `backend/ai_engine` 模块，将单文件改为包结构 (`__init__.py`)，解决了导入和编码问题。
+  - 创建并通过了单元测试 `backend/tests/test_prompts.py`。
+  - 解决了 Windows 环境下的 Unicode 编码问题（将提示词模板和注释改为英文）。
+- 遇到的问题：Python 包导入路径问题和 Windows 控制台编码问题，通过重构和使用英文解决。
+- 下一步建议：
+  1. 实现 `ai-003` (文本生成与解析)。
+  2. 将 `PromptManager` 集成到 `AIEngine` 中，替换硬编码的提示词。
+- 项目状态：AI 引擎核心结构已优化，提示词管理已就绪。
