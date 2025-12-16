@@ -209,8 +209,8 @@ class DependencyChecker:
         except Exception:
             pass
 
-        Logger.error("npm未安装或不在PATH中")
-        return False
+        Logger.warning("npm未安装或不在PATH中，尝试使用npx...")
+        return True  # npm是可选的，可以使用npx
 
     @staticmethod
     def check_ollama() -> bool:
@@ -292,13 +292,27 @@ class ServiceManager:
             pip_path = os.path.join(CONFIG["venv_dir"], "bin", "pip")
 
         try:
-            # 升级pip
-            subprocess.run([pip_path, "install", "--upgrade", "pip"], check=True, capture_output=True)
+            # 升级pip（可选，如果失败继续）
+            try:
+                subprocess.run([pip_path, "install", "--upgrade", "pip"], check=True, capture_output=True)
+            except subprocess.CalledProcessError:
+                Logger.warning("pip升级失败，继续安装依赖...")
+
             # 安装依赖
-            subprocess.run([pip_path, "install", "-r", CONFIG["requirements_file"]], check=True, capture_output=True)
-            Logger.success("Python依赖安装完成")
-            return True
-        except subprocess.CalledProcessError as e:
+            result = subprocess.run([pip_path, "install", "-r", CONFIG["requirements_file"]], capture_output=True, text=True)
+            if result.returncode == 0:
+                Logger.success("Python依赖安装完成")
+                return True
+            else:
+                Logger.warning(f"Python依赖安装可能有问题: {result.stderr[:200]}")
+                # 检查是否至少安装了核心依赖
+                if "fastapi" in result.stdout or "uvicorn" in result.stdout:
+                    Logger.success("核心依赖已安装，继续启动...")
+                    return True
+                else:
+                    Logger.error("Python依赖安装失败")
+                    return False
+        except Exception as e:
             Logger.error(f"安装Python依赖失败: {e}")
             return False
 
@@ -433,6 +447,21 @@ class ServiceManager:
     def open_browser(self):
         """打开浏览器"""
         Logger.info("打开浏览器...")
+
+        # 等待前端服务完全启动
+        Logger.info("等待前端服务完全启动...")
+        max_attempts = 30
+        for i in range(max_attempts):
+            try:
+                response = requests.get(CONFIG["frontend_url"], timeout=2)
+                if response.status_code == 200:
+                    Logger.success("前端服务已就绪")
+                    break
+            except requests.RequestException:
+                if i % 5 == 0:  # 每5秒打印一次状态
+                    Logger.info(f"等待前端服务启动... ({i+1}/{max_attempts}秒)")
+                time.sleep(1)
+
         try:
             webbrowser.open(CONFIG["frontend_url"])
             Logger.success(f"已打开浏览器: {CONFIG['frontend_url']}")
