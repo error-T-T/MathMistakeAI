@@ -234,7 +234,7 @@
       "识别知识点标签",
       "分析题目难度等级"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {

@@ -44,3 +44,25 @@ Notes
 - Commits: `17470b1`
 - Blockers: None
 - Next steps: Implement `ai-001` (NLP feature extraction).
+
+## Session 2025-12-16 09:15
+- Owner: GitHub Copilot
+- Completed:
+  - Cleaned up unused prompt files.
+  - Updated git remote to `https://github.com/error-T-T/MathMistakeAI.git`.
+  - Verified one-click launcher functionality (auto-open browser).
+- Files changed: `Ò»¼üÆô¶¯.bat`, `claude-progress.txt`
+- Commits: `fb62ba0`
+- Blockers: Need manual GitHub repo creation.
+- Next steps: User to create GitHub repo and push; then implement `ai-001`.
+
+## Session 2025-12-16 09:30
+- Owner: GitHub Copilot
+- Completed:
+  - Implemented `ai-001` (NLP Feature Extraction).
+  - Created and passed unit tests for feature extractor.
+  - Resolved Windows encoding issues in source files.
+- Files changed: `backend/analyzers/feature_extractor.py`, `backend/tests/test_feature_extractor.py`
+- Commits: (Pending)
+- Blockers: None
+- Next steps: Mark `ai-001` as done, integrate into AI engine, and start `ai-002`.

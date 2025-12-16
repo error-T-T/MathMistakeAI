@@ -429,3 +429,29 @@ GitHub: error-T-T
   1. 实现 `ai-001` (NLP特征提取)。
   2. 继续优化前端其他页面（如 `MistakeDetailPage.tsx`）。
 - 项目状态：环境感知工具已修复，前端代码结构得到优化。
+
+## 会话 2025-12-16 09:15
+- 接管者: GitHub Copilot
+- 已做变更：
+  - 清理了多余的提示词文件。
+  - 更新了 Git 远程仓库地址为 `https://github.com/error-T-T/MathMistakeAI.git`。
+  - 确认 `launcher.py` 和 `一键启动.bat` 已配置为自动打开浏览器访问客户端。
+- 遇到的问题：无法通过脚本自动创建 GitHub 仓库（需鉴权）。
+- 下一步建议：
+  1. 请在 GitHub 上手动创建名为 `MathMistakeAI` 的公开仓库。
+  2. 运行 `git push -u origin master` 上传代码。
+  3. 继续实现 `ai-001`。
+- 项目状态：代码库已清理，准备上传。
+
+## 会话 2025-12-16 09:30
+- 接管者: GitHub Copilot
+- 已做变更：
+  - 实现了 `ai-001` (NLP特征提取) 功能，创建了 `backend/analyzers/feature_extractor.py`。
+  - 创建并通过了单元测试 `backend/tests/test_feature_extractor.py`。
+  - 解决了 Windows 环境下的 Unicode 编码问题（在代码中使用 Unicode 转义序列）。
+- 遇到的问题：Python 源文件在 Windows 下的编码问题导致 pytest 收集失败，通过使用 Unicode 转义序列和 ASCII 字符集解决。
+- 下一步建议：
+  1. 将 `ai-001` 标记为完成。
+  2. 集成特征提取器到主应用逻辑中（如 `ai_engine.py`）。
+  3. 继续实现 `ai-002` (提示词工程模板)。
+- 项目状态：NLP 特征提取模块已就绪并经过测试。
