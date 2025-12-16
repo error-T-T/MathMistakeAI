@@ -34,3 +34,13 @@ Notes
 
 - Maintainer contact: Rookie (error-T-T) ¡ª RookieT@e.gzhu.edu.cn
 - This file is intended to be the primary, human-friendly session log. `claude-progress.txt` remains the automatic/detailed progress file used by the agent.
+
+## Session 2025-12-16 09:00
+- Owner: GitHub Copilot
+- Completed:
+  - Fixed `agent_runner` by replacing shell script with Python script to handle Windows encoding/EOL issues.
+  - Optimized frontend by extracting `MistakeCard` component.
+- Files changed: `agent_runner.py`, `frontend/src/components/MistakeCard.tsx`, `frontend/src/pages/MistakesPage.tsx`
+- Commits: `17470b1`
+- Blockers: None
+- Next steps: Implement `ai-001` (NLP feature extraction).
