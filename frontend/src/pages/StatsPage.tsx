@@ -1,11 +1,10 @@
 import { motion } from 'framer-motion'
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   AreaChart, Area
 } from 'recharts'
-import { TrendingUp, BookOpen, BarChart3, PieChart as PieChartIcon, Calendar, Target, AlertCircle } from 'lucide-react'
-import { useState } from 'react'
+import { TrendingUp, BookOpen, BarChart3, PieChart as PieChartIcon, Target, AlertCircle } from 'lucide-react'
 
 // 模拟数据 - 近期错题趋势（过去30天）
 const mistakeTrendData = [
@@ -44,7 +43,6 @@ const statCards = [
 ]
 
 const StatsPage = () => {
-  const [activeChart, setActiveChart] = useState<'trend' | 'knowledge' | 'difficulty'>('trend')
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

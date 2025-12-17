@@ -11,6 +11,7 @@ import pandas as pd
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import uuid
+import json
 from data_models import MistakeCreate, MistakeResponse, MistakeUpdate, DifficultyLevel, QuestionType, AnalysisResponse
 
 def safe_safe_print(text: str):
@@ -316,28 +317,40 @@ class CSVDataManager:
 
             # 解析分析结果（JSON字符串）
             analysis_result = None
-            if 'analysis_result' in row and pd.notna(row['analysis_result']) and row['analysis_result'].strip():
+            if 'analysis_result' in row and pd.notna(row['analysis_result']) and str(row['analysis_result']).strip():
                 try:
                     analysis_result = json.loads(row['analysis_result'])
                 except json.JSONDecodeError:
-                    safe_print(f"[WARN] 无法解析analysis_result JSON: {row['analysis_result'][:50]}...")
+                    safe_safe_print(f"[WARN] 无法解析analysis_result JSON: {str(row['analysis_result'])[:50]}...")
                     analysis_result = None
 
+            # 将 created_at / updated_at 统一转为 ISO 字符串，前端使用字符串更安全
+            created_at_raw = row['created_at']
+            updated_at_raw = row['updated_at']
+            try:
+                created_at = datetime.fromisoformat(str(created_at_raw)).isoformat()
+            except Exception:
+                created_at = datetime.now().isoformat()
+            try:
+                updated_at = datetime.fromisoformat(str(updated_at_raw)).isoformat()
+            except Exception:
+                updated_at = datetime.now().isoformat()
+
             return MistakeResponse(
-                id=row['id'],
-                question_content=row['question_content'],
-                wrong_process=row['wrong_process'],
-                wrong_answer=row['wrong_answer'],
-                correct_answer=row['correct_answer'],
-                question_type=QuestionType(row['question_type']),
+                id=str(row['id']),
+                question_content=str(row['question_content']),
+                wrong_process=str(row['wrong_process']),
+                wrong_answer=str(row['wrong_answer']),
+                correct_answer=str(row['correct_answer']),
+                question_type=QuestionType(str(row['question_type'])),
                 knowledge_tags=tags,
-                difficulty=DifficultyLevel(row['difficulty']),
-                source=row['source'] if pd.notna(row['source']) else None,
-                notes=row['notes'] if pd.notna(row['notes']) else None,
-                created_at=datetime.fromisoformat(row['created_at']),
-                updated_at=datetime.fromisoformat(row['updated_at']),
-                analysis_result=analysis_result
+                difficulty=DifficultyLevel(str(row['difficulty'])),
+                source=str(row['source']) if 'source' in row and pd.notna(row['source']) else None,
+                notes=str(row['notes']) if 'notes' in row and pd.notna(row['notes']) else None,
+                created_at=created_at,
+                updated_at=updated_at,
+                analysis_result=analysis_result,
             )
         except Exception as e:
-            safe_print(f"[ERROR] 转换错题数据失败: {e}")
+            safe_safe_print(f"[ERROR] 转换错题数据失败: {e}")
             return None

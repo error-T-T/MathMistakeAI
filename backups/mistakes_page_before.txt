@@ -1,0 +1,172 @@
+import { useState, useEffect } from 'react'
+import { Search, Filter, Plus, Loader2, AlertCircle, Upload } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { mistakesApi } from '../services/api'
+import { DifficultyLevel, QuestionType, MistakeResponse } from '../types'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import { Alert } from '../components/ui/Alert'
+import { Dialog } from '../components/ui/Dialog'
+import { Skeleton } from '../components/ui/Skeleton'
+import MistakeCard from '../components/MistakeCard'
+
+const MistakesPage = () => {
+  // 状态管理
+  const [mistakes, setMistakes] = useState<MistakeResponse[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // 搜索和筛选状态
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedType, setSelectedType] = useState<QuestionType | 'all'>('all')
+  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | 'all'>('all')
+  const [selectedTag, setSelectedTag] = useState<string>('')
+
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const pageSize = 12
+
+  // 删除确认对话框
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [mistakeToDelete, setMistakeToDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  // 标签列表（从错题中提取）
+  const [availableTags, setAvailableTags] = useState<string[]>([])
+
+  // 搜索处理函数
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentPage(1);
+    fetchMistakes();
+  };
+
+  // 获取错题列表
+  const fetchMistakes = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const params = {
+        page: currentPage,
+        page_size: pageSize,
+        search: searchQuery || undefined,
+        question_type: selectedType !== 'all' ? selectedType : undefined,
+        difficulty: selectedDifficulty !== 'all' ? selectedDifficulty : undefined,
+        knowledge_tag: selectedTag || undefined,
+      }
+
+      const response = await mistakesApi.getMistakes(params)
+
+      if (response && response.items && Array.isArray(response.items)) {
+        setMistakes(response.items)
+        setTotalItems(response.total || 0)
+        setTotalPages(response.total_pages || 1)
+
+        const tags = new Set<string>()
+        response.items.forEach((mistake) => {
+          mistake.knowledge_tags.forEach((tag) => tags.add(tag))
+        })
+        setAvailableTags(Array.from(tags))
+      } else {
+        console.error('Unexpected response format:', response)
+        setMistakes([])
+        setTotalItems(0)
+        setTotalPages(1)
+      }
+    } catch (error) {
+      console.error('获取错题列表失败:', error)
+      setError('获取错题列表失败，请稍后重试')
+      setMistakes([])
+      setTotalItems(0)
+      setTotalPages(1)
+    } finally {
+      setLoading(false)
+    }
+  };
+
+  // 删除错题
+  const handleDelete = async () => {
+    if (!mistakeToDelete) return;
+
+    try {
+      setDeleting(true);
+      await mistakesApi.deleteMistake(mistakeToDelete);
+      setDeleteDialogOpen(false);
+      setMistakeToDelete(null);
+      fetchMistakes(); // 刷新列表
+    } catch (error) {
+      console.error('删除错题失败:', error);
+      setError('删除错题失败，请稍后重试');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // 初始化加载
+  useEffect(() => {
+    fetchMistakes();
+  }, [currentPage]);
+
+  // 打开删除确认对话框
+  const openDeleteDialog = (id: string) => {
+    setMistakeToDelete(id)
+    setDeleteDialogOpen(true)
+  }
+
+  // 重置筛选条件
+  const resetFilters = () => {
+    setSearchQuery('')
+    setSelectedType('all')
+    setSelectedDifficulty('all')
+    setSelectedTag('')
+    setCurrentPage(1)
+  }
+
+  // 渲染加载骨架屏
+  const renderSkeletons = () => (
+    Array.from({ length: 6 }).map((_, index) => (
+      <div key={index} className="space-y-3">
+        <Skeleton className="h-40 rounded-lg" />
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+      </div>
+    ))
+  )
+
+  return (
+    <div className="space-y-6">
+      {/* 页面标题和操作按钮 */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">错题管理</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            管理你的数学错题，进行智能分析和学习规划
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Link to="/mistakes/new">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              新增错题
+            </Button>
+          </Link>
+          <Link to="/mistakes/import">
+            <Button variant="outline" className="gap-2">
+              <Upload className="h-4 w-4" />
+              导入错题
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* 错误提示 */}
+      {error && (
+        <Alert variant="destructive" icon={<AlertCircle className="h-4 w-4" />}>
+          {error}
+        </Alert>
+      )}
+...

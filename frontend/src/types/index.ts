@@ -99,6 +99,15 @@ export interface StatsResponse {
   accuracy_trend: number[]
 }
 
+// AI生成练习题响应模型
+export interface GeneratePracticeResponse {
+  knowledge_gaps: string[]
+  difficulty: string
+  similarity_level: string
+  count: number
+  questions: string[]
+}
+
 // API响应包装器
 export interface ApiResponse<T> {
   success: boolean

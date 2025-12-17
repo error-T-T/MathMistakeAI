@@ -10,7 +10,6 @@ import { Alert } from '../components/ui/Alert'
 import { Dialog } from '../components/ui/Dialog'
 import { Skeleton } from '../components/ui/Skeleton'
 import MistakeCard from '../components/MistakeCard'
-import NoMistakeFallback from '../components/NoMistakeFallback'
 
 const MistakesPage = () => {
   // 状态管理
@@ -126,14 +125,6 @@ const MistakesPage = () => {
     setSelectedTag('')
     setCurrentPage(1)
   }
-
-  const hasActiveFilters = Boolean(
-    searchQuery || selectedType !== 'all' || selectedDifficulty !== 'all' || selectedTag
-  )
-
-  const noMistakeDescription = hasActiveFilters
-    ? '没有找到符合条件的错题，请尝试调整筛选或导入更多错题。'
-    : '还没有添加任何错题，点击"新增错题"或"导入错题"开始记录。'
 
   // 渲染加载骨架屏
   const renderSkeletons = () => (
@@ -282,7 +273,19 @@ const MistakesPage = () => {
           {renderSkeletons()}
         </div>
       ) : mistakes.length === 0 ? (
-        <NoMistakeFallback description={noMistakeDescription} className="mt-6" />
+        <Card className="text-center py-12">
+          <CardContent>
+            <div className="text-gray-400 dark:text-gray-500 mb-4">
+              <Search className="h-12 w-12 mx-auto opacity-50" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">暂无错题数据</h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              {searchQuery || selectedType !== 'all' || selectedDifficulty !== 'all' || selectedTag
+                ? '没有找到符合条件的错题，请尝试调整筛选条件'
+                : '还没有添加任何错题，点击"新增错题"开始添加吧！'}
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

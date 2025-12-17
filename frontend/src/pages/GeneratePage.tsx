@@ -7,6 +7,7 @@ import { Input } from '../components/ui/Input'
 import { Badge } from '../components/ui/Badge'
 import { Alert } from '../components/ui/Alert'
 import { aiApi } from '../services/api'
+import MathText from '../components/MathText'
 
 const GeneratePage = () => {
   // 状态管理
@@ -41,14 +42,13 @@ const GeneratePage = () => {
     setError(null)
 
     try {
-      // 调用API生成练习题
       const result = await aiApi.generatePractice({
         knowledge_gaps: tags,
         difficulty,
-        count
+        count,
       })
-
-      setGeneratedQuestions(result)
+      // 使用后端返回的 questions 字段
+      setGeneratedQuestions(result.questions)
       setPreviewMode(false)
     } catch (err: any) {
       console.error('生成练习题失败:', err)
@@ -234,7 +234,7 @@ const GeneratePage = () => {
                           {index + 1}
                         </div>
                         <div className="flex-1">
-                          <p className="text-gray-900 dark:text-gray-100">{question}</p>
+                          <MathText text={question} />
                           <div className="flex items-center gap-2 mt-2">
                             <Badge variant="outline" className="text-xs">
                               {difficulty}
@@ -287,7 +287,7 @@ const GeneratePage = () => {
                           {index + 1}
                         </div>
                         <div className="flex-1">
-                          <p className="text-gray-900 dark:text-gray-100">{question}</p>
+                          <MathText text={question} />
                           <div className="flex items-center gap-2 mt-2">
                             <Badge variant="outline" className="text-xs">
                               {difficulty}

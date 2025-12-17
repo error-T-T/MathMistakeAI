@@ -98,3 +98,27 @@ Notes
 - Commits: `958cf78`
 - Blockers: None
 - Next steps: Implement `ai-003` and integrate PromptManager into AIEngine.
+
+## Session 2025-12-16 10:30
+- Owner: GitHub Copilot
+- Completed:
+  - Implemented `ai-003` (Text Generation and Parsing).
+  - Integrated `PromptManager` into `AIEngine`.
+  - Added explanation and summary generation capabilities.
+  - Verified with integration tests.
+- Files changed: `backend/ai_engine/__init__.py`, `backend/ai_engine/prompts.py`, `backend/tests/test_ai_engine_integration.py`, `features.json`
+- Commits: `00d7a6f`
+- Blockers: None
+- Next steps: Check `backend/routers/ai.py` integration or proceed to `be-005`.
+
+## Session 2025-12-16 11:30
+- Owner: GitHub Copilot
+- Completed:
+  - Fixed frontend AI generate page to align with backend `/api/ai/generate-practice` response and added `GeneratePracticeResponse` type.
+  - Added shared `MathText` component and wired KaTeX rendering for generated questions.
+  - Enabled `/mistakes/new` route and updated `MistakeDetailPage` to support both create-new and edit-existing modes.
+  - Simplified `一键启动.bat` to delegate to `launcher.py` only.
+- Files changed: `frontend/src/types/index.ts`, `frontend/src/services/api.ts`, `frontend/src/components/MathText.tsx`, `frontend/src/types/react-katex.d.ts`, `frontend/src/pages/GeneratePage.tsx`, `frontend/src/App.tsx`, `frontend/src/pages/MistakeDetailPage.tsx`, `一键启动.bat`
+- Commits: (Pending)
+- Blockers: None
+- Next steps: Wire `StatsPage` to real `/api/mistakes/stats/summary` data and add basic drill-down interactions.
