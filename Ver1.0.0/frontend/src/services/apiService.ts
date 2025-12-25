@@ -66,13 +66,13 @@ export const apiService = {
   
   // 试卷生成与导出
   generatePaper: (params: PaperParams) => request<Paper>(API_ENDPOINTS.GENERATE_PAPER, 'POST', params),
-  
-  exportPaper: (paperId: string) => request<Blob>(API_ENDPOINTS.EXPORT_PAPER, 'GET', undefined, {
-    responseType: 'blob'
+
+  exportPaper: (_paperId: string) => request<Blob>(API_ENDPOINTS.EXPORT_PAPER, 'GET', undefined, {
+    headers: { Accept: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
   }),
-  
-  exportAnswers: (paperId: string) => request<Blob>(API_ENDPOINTS.EXPORT_ANSWERS, 'GET', undefined, {
-    responseType: 'blob'
+
+  exportAnswers: (_paperId: string) => request<Blob>(API_ENDPOINTS.EXPORT_ANSWERS, 'GET', undefined, {
+    headers: { Accept: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
   }),
   
   // 统计数据

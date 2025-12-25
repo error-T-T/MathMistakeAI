@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/mistakecard.tsx","./src/config/apiconfig.ts","./src/pages/generationpage.tsx","./src/pages/homepage.tsx","./src/pages/mistakedetailpage.tsx","./src/pages/mistakemanagementpage.tsx","./src/pages/statisticspage.tsx","./src/services/apiservice.ts","./src/types/index.ts"],"version":"5.9.3"}

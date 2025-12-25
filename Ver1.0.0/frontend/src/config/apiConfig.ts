@@ -1,5 +1,10 @@
 // API配置文件
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const getApiBaseUrl = (): string => {
+  const envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
+  return envUrl || '/api';
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 
 export const API_ENDPOINTS = {
   HEALTH: '/health',
