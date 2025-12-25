@@ -346,6 +346,69 @@ const MistakeManagementPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* 分享给其他AI的提示词 */}
+              <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 rounded-lg p-4 border border-blue-500/30">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-medium text-blue-300">💡 分享给其他AI的提示词</h3>
+                  <button
+                    onClick={() => {
+                      const prompt = `你是一个数学导师。请分析以下学生的错题并提供详细指导：
+
+【题目ID】：{question_id}
+【题目类型】：{question_type}
+【题目内容】：{question_content}
+【学生的错误过程或答案】：{wrong_process}
+【正确答案】：{correct_answer}
+【涉及知识点】：{knowledge_points}
+【难度等级】：{difficulty_level}
+
+请按以下结构化格式回复：
+1. **错误类型诊断**：明确是概念不清、计算失误还是方法错误
+2. **逐步正确解析**：展示完整的解题步骤
+3. **通用解法（通法）**：总结这类题目的通用思路和步骤
+4. **针对性学习建议**：基于此错误，给出复习建议
+
+---
+项目：MathMistakeAI
+作者：Rookie
+GitHub：https://github.com/error-T-T/MathMistakeAI
+邮箱：RookieT@e.gzhu.edu.cn`;
+                      navigator.clipboard.writeText(prompt);
+                      alert('提示词已复制到剪贴板！');
+                    }}
+                    className="text-sm px-3 py-1 bg-blue-500/30 hover:bg-blue-500/50 rounded-lg transition-colors"
+                  >
+                    📋 复制提示词
+                  </button>
+                </div>
+                <div className="text-sm text-blue-200/80 bg-black/30 rounded p-3 font-mono whitespace-pre-wrap">
+{`你是一个数学导师。请分析以下学生的错题并提供详细指导：
+
+【题目ID】：{请填入题目ID}
+【题目类型】：{请填入题目类型}
+【题目内容】：{请填入题目内容}
+【学生的错误过程或答案】：{请填入错误过程或答案}
+【正确答案】：{请填入正确答案}
+【涉及知识点】：{请填入知识点标签}
+【难度等级】：{请填入难度等级}
+
+请按以下结构化格式回复：
+1. **错误类型诊断**：明确是概念不清、计算失误还是方法错误
+2. **逐步正确解析**：展示完整的解题步骤
+3. **通用解法（通法）**：总结这类题目的通用思路和步骤
+4. **针对性学习建议**：基于此错误，给出复习建议
+
+---
+项目：MathMistakeAI
+作者：Rookie
+GitHub：https://github.com/error-T-T/MathMistakeAI
+邮箱：RookieT@e.gzhu.edu.cn`}
+                </div>
+                <p className="text-xs text-blue-400/60 mt-2">
+                  * 点击"复制提示词"将模板复制到剪贴板，然后粘贴给其他AI助手使用
+                </p>
+              </div>
+
               {/* 导入按钮 */}
               <div className="flex gap-4 justify-end">
                 <button

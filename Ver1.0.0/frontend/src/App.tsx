@@ -67,6 +67,18 @@ function App() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white/60 text-sm">
             <p>© 2025 MathMistakeAI. 大学生数学错题智能分析系统</p>
             <p className="mt-1">基于本地AI的个性化错题处理系统</p>
+            <p className="mt-2 text-xs text-white/40">
+              作者：Rookie & 艾可希雅 | 
+              <a 
+                href="https://github.com/error-T-T/MathMistakeAI" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-blue-400 transition-colors ml-1"
+              >
+                GitHub: error-T-T/MathMistakeAI
+              </a> |
+              <span className="ml-1">邮箱：RookieT@e.gzhu.edu.cn</span>
+            </p>
           </div>
         </footer>
       </div>
