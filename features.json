@@ -37,7 +37,7 @@
       "系统自动识别公式",
       "在界面上正确显示提取的公式"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {
@@ -50,7 +50,7 @@
       "识别错误类型（概念错误、计算错误、方法错误）",
       "在界面上显示错误类型"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {
@@ -63,7 +63,7 @@
       "解析包含完整的解题步骤",
       "步骤清晰易懂"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {
@@ -76,7 +76,7 @@
       "总结包含通用解法",
       "适用于同类题型"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {
