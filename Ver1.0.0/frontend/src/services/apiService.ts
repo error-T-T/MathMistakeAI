@@ -47,9 +47,7 @@ export const apiService = {
     const formData = new FormData();
     formData.append('file', file);
     return request<ImportResponse>(API_ENDPOINTS.IMPORT_FILE, 'POST', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+      headers: {}  // 不设置Content-Type，让浏览器自动设置multipart/form-data
     });
   },
   
@@ -57,6 +55,16 @@ export const apiService = {
   getAllMistakes: () => request<Mistake[]>(API_ENDPOINTS.MISTAKES),
   
   getMistakeById: (id: string) => request<Mistake>(API_ENDPOINTS.MISTAKE_BY_ID.replace(':id', id)),
+  
+  deleteMistake: (id: string) => request<{ success: boolean; message: string }>(
+    API_ENDPOINTS.DELETE_MISTAKE.replace(':id', id), 
+    'DELETE'
+  ),
+  
+  clearAllMistakes: () => request<{ success: boolean; message: string }>(
+    API_ENDPOINTS.CLEAR_ALL_MISTAKES, 
+    'DELETE'
+  ),
   
   // AI错题分析
   analyzeMistake: (mistakeId: string) => request<AnalysisResult>(API_ENDPOINTS.ANALYZE, 'POST', { mistakeId }),

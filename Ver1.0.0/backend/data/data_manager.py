@@ -199,3 +199,58 @@ def get_mistakes_by_difficulty(difficulty: str) -> List[Dict]:
             result.append(mistake)
     
     return result
+
+
+def delete_mistake_by_id(mistake_id: str) -> bool:
+    """
+    根据ID删除错题数据
+    参数:
+        mistake_id: 错题ID
+    返回:
+        bool: 是否删除成功
+    """
+    mistakes = get_all_mistakes()
+    
+    # 查找并删除
+    updated_mistakes = [m for m in mistakes if m["id"] != mistake_id]
+    
+    # 如果数量没变，说明没找到
+    if len(updated_mistakes) == len(mistakes):
+        return False
+    
+    # 重新写入CSV
+    with open(MISTAKES_CSV, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=[
+            "id", "question_id", "question_type", "question_content", 
+            "wrong_process", "wrong_answer", "correct_answer", 
+            "knowledge_points", "difficulty_level"
+        ])
+        writer.writeheader()
+        for mistake in updated_mistakes:
+            # 确保知识点是字符串格式
+            if isinstance(mistake["knowledge_points"], list):
+                mistake["knowledge_points"] = ",".join(mistake["knowledge_points"])
+            writer.writerow(mistake)
+    
+    return True
+
+
+def clear_all_mistakes() -> int:
+    """
+    清空所有错题数据
+    返回:
+        int: 删除的错题数量
+    """
+    mistakes = get_all_mistakes()
+    count = len(mistakes)
+    
+    # 清空CSV文件
+    with open(MISTAKES_CSV, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=[
+            "id", "question_id", "question_type", "question_content", 
+            "wrong_process", "wrong_answer", "correct_answer", 
+            "knowledge_points", "difficulty_level"
+        ])
+        writer.writeheader()
+    
+    return count

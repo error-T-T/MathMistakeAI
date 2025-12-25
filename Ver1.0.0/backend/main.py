@@ -40,19 +40,23 @@ class MistakeData(BaseModel):
 class MistakeResponse(BaseModel):
     id: str
     question_id: str
-    question_type: str
+    question_type: Optional[str] = None
     question_content: str
-    wrong_process: str
+    wrong_process: Optional[str] = None
     wrong_answer: str
     correct_answer: str
     knowledge_points: List[str]
-    difficulty_level: str
+    difficulty_level: Optional[str] = None
     message: Optional[str] = None
 
 class ImportResponse(BaseModel):
     success: bool
     message: str
     mistakes: Optional[List[MistakeResponse]] = None
+
+class DeleteResponse(BaseModel):
+    success: bool
+    message: str
 
 # AI分析结果响应模型
 class AnalysisResult(BaseModel):
@@ -153,7 +157,36 @@ async def analyze_mistake(request: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# 删除单个错题
+@app.delete("/api/mistakes/{mistake_id}", response_model=DeleteResponse)
+async def delete_mistake(mistake_id: str):
+    try:
+        success = data_manager.delete_mistake_by_id(mistake_id)
+        if success:
+            return {
+                "success": True,
+                "message": "错题删除成功"
+            }
+        else:
+            raise HTTPException(status_code=404, detail="错题不存在")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 清空所有错题
+@app.delete("/api/mistakes", response_model=DeleteResponse)
+async def clear_all_mistakes():
+    try:
+        count = data_manager.clear_all_mistakes()
+        return {
+            "success": True,
+            "message": f"已清空 {count} 道错题"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # 运行服务器
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
