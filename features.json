@@ -10,7 +10,7 @@
       "点击确认按钮",
       "验证错题数据被正确导入"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {
@@ -25,7 +25,7 @@
       "点击确认按钮",
       "验证错题数据被正确导入"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {
