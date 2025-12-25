@@ -1,0 +1,238 @@
+[
+  {
+    "id": "import-001",
+    "category": "数据导入",
+    "description": "用户可以通过UI界面粘贴符合模板的错题数据",
+    "acceptance_criteria": [
+      "导航到错题管理页",
+      "点击导入按钮",
+      "在文本框中粘贴符合模板的错题数据",
+      "点击确认按钮",
+      "验证错题数据被正确导入"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "import-002",
+    "category": "数据导入",
+    "description": "用户可以上传符合模板的.txt文件导入错题数据",
+    "acceptance_criteria": [
+      "导航到错题管理页",
+      "点击导入按钮",
+      "选择上传文件选项",
+      "选择符合模板的.txt文件",
+      "点击确认按钮",
+      "验证错题数据被正确导入"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "analysis-001",
+    "category": "AI错题分析",
+    "description": "系统可以识别并提取题目中的数学公式/符号",
+    "acceptance_criteria": [
+      "导入一道包含数学公式的错题",
+      "系统自动识别公式",
+      "在界面上正确显示提取的公式"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "analysis-002",
+    "category": "AI错题分析",
+    "description": "系统可以分析错误原因并分类",
+    "acceptance_criteria": [
+      "导入一道错题",
+      "系统分析错误过程",
+      "识别错误类型（概念错误、计算错误、方法错误）",
+      "在界面上显示错误类型"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "analysis-003",
+    "category": "AI错题分析",
+    "description": "系统可以生成分步骤的详细解析",
+    "acceptance_criteria": [
+      "导入一道错题",
+      "系统生成详细解析",
+      "解析包含完整的解题步骤",
+      "步骤清晰易懂"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "analysis-004",
+    "category": "AI错题分析",
+    "description": "系统可以提供本题的'通法'总结",
+    "acceptance_criteria": [
+      "导入一道错题",
+      "系统生成通法总结",
+      "总结包含通用解法",
+      "适用于同类题型"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "generate-001",
+    "category": "智能题目生成",
+    "description": "用户可以配置生成题目的相似度参数",
+    "acceptance_criteria": [
+      "导航到智能生成页",
+      "选择相似度选项（仅改数字、同类型变形、混合知识点）",
+      "系统根据选择生成相应相似度的题目"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "generate-002",
+    "category": "智能题目生成",
+    "description": "用户可以配置生成题目的数量",
+    "acceptance_criteria": [
+      "导航到智能生成页",
+      "使用滑动条或输入框选择生成数量（1-50题）",
+      "系统生成指定数量的题目"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "generate-003",
+    "category": "智能题目生成",
+    "description": "用户可以配置生成题目的难度",
+    "acceptance_criteria": [
+      "导航到智能生成页",
+      "选择难度级别（简单、中等、困难）",
+      "系统生成相应难度的题目"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "generate-004",
+    "category": "智能题目生成",
+    "description": "用户可以配置生成题目的知识点",
+    "acceptance_criteria": [
+      "导航到智能生成页",
+      "勾选要侧重的知识点",
+      "系统生成覆盖指定知识点的题目"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "paper-001",
+    "category": "智能组卷与导出",
+    "description": "用户可以配置试卷参数",
+    "acceptance_criteria": [
+      "导航到智能生成页",
+      "选择组卷选项",
+      "配置试卷标题、题量、难度分布、知识点覆盖范围",
+      "系统根据配置生成试卷"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "paper-002",
+    "category": "智能组卷与导出",
+    "description": "系统可以导出试卷.docx文件",
+    "acceptance_criteria": [
+      "生成一份试卷",
+      "点击导出试卷按钮",
+      "下载试卷.docx文件",
+      "文件包含页眉、题目（LaTeX公式渲染）、页脚"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "paper-003",
+    "category": "智能组卷与导出",
+    "description": "系统可以导出答案与解析.docx文件",
+    "acceptance_criteria": [
+      "生成一份试卷",
+      "点击导出答案按钮",
+      "下载答案与解析.docx文件",
+      "文件包含每道题的详细解析、相关知识点、关联的错题ID"
+    ],
+    "passes": false,
+    "priority": "high"
+  },
+  {
+    "id": "ui-001",
+    "category": "前端界面",
+    "description": "首页显示系统简介和功能导航",
+    "acceptance_criteria": [
+      "导航到首页",
+      "显示系统简介",
+      "显示功能导航大卡片",
+      "显示近期错题统计概览"
+    ],
+    "passes": false,
+    "priority": "medium"
+  },
+  {
+    "id": "ui-002",
+    "category": "前端界面",
+    "description": "错题管理页以卡片网格展示所有错题",
+    "acceptance_criteria": [
+      "导航到错题管理页",
+      "显示所有错题的卡片网格",
+      "支持搜索功能",
+      "支持按标签筛选",
+      "支持按难度筛选"
+    ],
+    "passes": false,
+    "priority": "medium"
+  },
+  {
+    "id": "ui-003",
+    "category": "前端界面",
+    "description": "错题详情页展示题目和AI分析结果",
+    "acceptance_criteria": [
+      "在错题管理页点击一个错题卡片",
+      "导航到错题详情页",
+      "显示题目内容",
+      "显示错误过程",
+      "显示AI分析结果（错误原因、分步解析、通法）",
+      "显示关联知识点"
+    ],
+    "passes": false,
+    "priority": "medium"
+  },
+  {
+    "id": "ui-004",
+    "category": "前端界面",
+    "description": "智能生成页提供参数配置和实时预览",
+    "acceptance_criteria": [
+      "导航到智能生成页",
+      "左侧显示参数配置面板（滑动条、下拉菜单、多选框）",
+      "右侧显示实时预览区",
+      "配置参数后实时更新预览内容"
+    ],
+    "passes": false,
+    "priority": "medium"
+  },
+  {
+    "id": "ui-005",
+    "category": "前端界面",
+    "description": "数据统计页展示学习数据图表",
+    "acceptance_criteria": [
+      "导航到数据统计页",
+      "显示近期错题趋势折线图",
+      "显示知识点分布饼图",
+      "显示难度分布柱状图（带动画效果）",
+      "图表可交互"
+    ],
+    "passes": false,
+    "priority": "medium"
+  }
+]
