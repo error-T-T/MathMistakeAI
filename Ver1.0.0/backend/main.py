@@ -19,6 +19,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # 导入数据处理模块
 from data import data_manager
+from analyzers import mistake_analyzer
 
 app = FastAPI(title="MathMistakeAI API", version="1.0.0")
 
@@ -52,6 +53,16 @@ class ImportResponse(BaseModel):
     success: bool
     message: str
     mistakes: Optional[List[MistakeResponse]] = None
+
+# AI分析结果响应模型
+class AnalysisResult(BaseModel):
+    mistake_id: str
+    formula_extraction: List[str]
+    error_type: str
+    error_reason: str
+    step_by_step_solution: List[str]
+    general_method: str
+    specific_strategy: Optional[str] = None
 
 # 健康检查端点
 @app.get("/health")
@@ -123,6 +134,22 @@ async def get_mistake(mistake_id: str):
         return mistake
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 错题分析端点
+@app.post("/api/analyze", response_model=AnalysisResult)
+async def analyze_mistake(request: dict):
+    try:
+        mistake_id = request.get("mistakeId")
+        if not mistake_id:
+            raise HTTPException(status_code=400, detail="缺少必要参数 mistakeId")
+        
+        # 调用错题分析器进行分析
+        analysis = mistake_analyzer.analyze_mistake_by_id(mistake_id)
+        return analysis
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
