@@ -38,13 +38,13 @@
 - 前端构建已通过验证（npm run build成功）
 - 下一步建议：完善AI分析功能的集成和前后端联调
 
-## 会话 2025-12-26（续）
-- 已完成前后端AI分析功能集成检查：
-  - 后端API端点 `/api/analyze` 已实现，调用 `mistake_analyzer.analyze_mistake_by_id()`
-  - 后端AI引擎 `ai_engine.py` 包含 `analyze_mistake()` 和 `extract_formulas()` 函数
-  - 前端 `apiService.ts` 已集成 `analyzeMistake()` API调用
-  - 前端 `MistakeDetailPage.tsx` 已实现完整的AI分析结果展示UI
-  - 公式提取、错误类型诊断、分步解析、通法总结功能均已实现
-- 已更新features.json，将AI分析功能（analysis-001至analysis-004）标记为已完成
-- 已创建一键启动程序 `一键启动.bat`，可同时启动前后端服务并自动打开浏览器
-- 下一步建议：创建智能题目生成功能（generate-001至generate-005）
+## 会话 2025-12-26（续）- 已完成智能题目生成功能（generate-001至generate-004）实现和测试：
+  - 后端：创建了 `/api/generate/questions` API端点，调用 AI 引擎生成题目
+  - 后端 AI 引擎：实现了 `generate_questions()` 函数，支持三种相似度级别（仅改数字、同类型变形、混合知识点）
+  - 前端：完善了 GenerationPage 参数配置面板（相似度、数量、难度、知识点）
+  - 前端：实现了实时预览区，展示生成的题目内容
+  - 测试：通过 test_api.py 脚本验证了所有 API 端点正常工作
+  - 测试结果：三种相似度级别均能成功生成题目，生成数量正确
+- 已更新 features.json，将 generate-001至generate-004 标记为完成
+- 项目状态：核心功能（数据导入、AI分析、智能题目生成）已完成，待实现智能组卷与导出功能（paper-001至paper-003）
+- 下一步建议：实现智能组卷与导出功能（生成 .docx 试卷和答案文件）

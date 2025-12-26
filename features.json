@@ -88,7 +88,7 @@
       "选择相似度选项（仅改数字、同类型变形、混合知识点）",
       "系统根据选择生成相应相似度的题目"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {
@@ -100,7 +100,7 @@
       "使用滑动条或输入框选择生成数量（1-50题）",
       "系统生成指定数量的题目"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {
@@ -112,7 +112,7 @@
       "选择难度级别（简单、中等、困难）",
       "系统生成相应难度的题目"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {
@@ -124,7 +124,7 @@
       "勾选要侧重的知识点",
       "系统生成覆盖指定知识点的题目"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high"
   },
   {
