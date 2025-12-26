@@ -70,7 +70,21 @@ export const apiService = {
   analyzeMistake: (mistakeId: string) => request<AnalysisResult>(API_ENDPOINTS.ANALYZE, 'POST', { mistakeId }),
   
   // 题目生成
-  generateQuestions: (params: GenerationParams) => request<GeneratedQuestion[]>(API_ENDPOINTS.GENERATE_QUESTIONS, 'POST', params),
+  generateQuestions: (params: GenerationParams) => {
+    const backendParams = {
+      mistake_id: params.base_mistake_id,
+      similarity_level: params.similarity === 'only_numbers' ? '仅改数字' : 
+                        params.similarity === 'same_type' ? '同类型变形' : '混合知识点',
+      quantity: params.quantity,
+      target_difficulty: params.difficulty === 'easy' ? '简单' : 
+                         params.difficulty === 'medium' ? '中等' : '困难'
+    };
+    return request<{ success: boolean; message: string; questions: any[] }>(
+      API_ENDPOINTS.GENERATE_QUESTIONS, 
+      'POST', 
+      backendParams
+    );
+  },
   
   // 试卷生成与导出
   generatePaper: (params: PaperParams) => request<Paper>(API_ENDPOINTS.GENERATE_PAPER, 'POST', params),

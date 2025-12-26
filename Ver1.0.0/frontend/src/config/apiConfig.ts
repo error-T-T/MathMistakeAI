@@ -1,7 +1,7 @@
 // API配置文件
 const getApiBaseUrl = (): string => {
   const envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
-  return envUrl || 'http://localhost:8001';
+  return envUrl || 'http://localhost:8003';
 };
 
 export const API_BASE_URL = getApiBaseUrl();

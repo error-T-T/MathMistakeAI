@@ -8,7 +8,7 @@ import sys
 import os
 
 # 添加当前目录到系统路径
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from ai_engine import analyze_mistake as ai_analyze_mistake, extract_formulas
 from data import data_manager

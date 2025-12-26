@@ -1,0 +1,44 @@
+你是一个专业的数学题目生成专家。请根据以下要求生成新的数学题目。
+
+【原始错题信息】
+题目ID：{source_mistake_id}
+题目类型：{question_type}
+题目内容：{question_content}
+错误过程：{wrong_process}
+正确答案：{correct_answer}
+知识点：{knowledge_points}
+难度等级：{difficulty_level}
+
+【生成要求】
+相似度级别：{similarity_level}
+题目数量：{quantity}
+目标难度：{target_difficulty}
+
+相似度级别说明：
+- "仅改数字"：保持题目结构和解题方法完全不变，仅更换数字
+- "同类型变形"：保持知识点不变，改变题目结构或增加小步骤
+- "混合知识点"：将原始知识点与其他相关知识点结合，生成综合性题目
+
+请生成 {quantity} 道符合要求的题目，并按照以下JSON格式返回：
+
+```json
+{{
+  "questions": [
+    {{
+      "question_id": "QGEN-001",
+      "question_content": "生成的题目内容（包含数学公式）",
+      "solution": "标准答案",
+      "solution_steps": ["步骤1", "步骤2", "步骤3"],
+      "difficulty": "生成的题目难度",
+      "knowledge_points": ["知识点1", "知识点2"],
+      "generation_method": "生成方法说明"
+    }}
+  ],
+  "generation_summary": {{
+    "source_mistake_id": "{source_mistake_id}",
+    "total_generated": {quantity},
+    "similarity_level": "{similarity_level}",
+    "target_difficulty": "{target_difficulty}"
+  }}
+}}
+```

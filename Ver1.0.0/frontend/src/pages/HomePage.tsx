@@ -38,13 +38,13 @@ const HomePage: React.FC = () => {
       title: '错题导入',
       description: '支持粘贴或上传符合模板的错题文本文件',
       icon: '📥',
-      path: '/mistakes'
+      path: '/mistakes/import'
     },
     {
       title: 'AI错题分析',
       description: '智能识别错误原因，提供详细解析和解题通法',
       icon: '🤖',
-      path: '/mistakes'
+      path: '/mistakes/analysis'
     },
     {
       title: '智能题目生成',
@@ -56,7 +56,7 @@ const HomePage: React.FC = () => {
       title: '智能组卷与导出',
       description: '定制试卷，支持导出Word文档',
       icon: '📄',
-      path: '/generate'
+      path: '/generate/exam'
     },
     {
       title: '数据统计分析',

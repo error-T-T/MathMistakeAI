@@ -9,7 +9,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 const StatisticsPage: React.FC = () => {
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasData, setHasData] = useState(false);
 
   useEffect(() => {
@@ -18,9 +18,10 @@ const StatisticsPage: React.FC = () => {
         const data = await apiService.getStatistics();
         setStatistics(data);
         setHasData(true);
+        setErrorMessage(null);
       } catch (err) {
         console.error('获取统计数据失败:', err);
-        setError('无法加载统计数据');
+        setErrorMessage('无法加载统计数据，请检查后端服务是否运行');
         setHasData(false);
       } finally {
         setIsLoading(false);
@@ -48,6 +49,23 @@ const StatisticsPage: React.FC = () => {
           className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"
         />
         <p className="text-white/60">加载统计数据...</p>
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-red-400 mb-2">加载失败</h2>
+          <p className="text-white/60">{errorMessage}</p>
+        </motion.div>
       </div>
     );
   }

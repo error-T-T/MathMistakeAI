@@ -10,7 +10,7 @@ GitHub仓库：https://github.com/error-T-T/MathMistakeAI
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import os
 import sys
 
@@ -20,6 +20,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # 导入数据处理模块
 from data import data_manager
 from analyzers import mistake_analyzer
+from ai_engine import generate_questions as ai_generate_questions
 
 app = FastAPI(title="MathMistakeAI API", version="1.0.0")
 
@@ -58,7 +59,6 @@ class DeleteResponse(BaseModel):
     success: bool
     message: str
 
-# AI分析结果响应模型
 class AnalysisResult(BaseModel):
     mistake_id: str
     formula_extraction: List[str]
@@ -67,6 +67,31 @@ class AnalysisResult(BaseModel):
     step_by_step_solution: List[str]
     general_method: str
     specific_strategy: Optional[str] = None
+
+# 题目生成请求模型
+class QuestionGenerationRequest(BaseModel):
+    mistake_id: str
+    similarity_level: str  # 仅改数字/同类型变形/混合知识点
+    quantity: int  # 1-50
+    target_difficulty: Optional[str] = None  # 简单/中等/困难
+
+# 生成的题目响应模型
+class GeneratedQuestion(BaseModel):
+    question_id: str
+    source_mistake_id: str
+    question_content: str
+    solution: str
+    solution_steps: List[str]
+    difficulty: str
+    knowledge_points: List[str]
+    generation_method: str
+
+# 题目生成响应模型
+class QuestionGenerationResponse(BaseModel):
+    success: bool
+    message: str
+    questions: Optional[List[GeneratedQuestion]] = None
+    generation_summary: Optional[Dict[str, Any]] = None
 
 # 健康检查端点
 @app.get("/health")
@@ -186,7 +211,52 @@ async def clear_all_mistakes():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# 智能题目生成端点
+@app.post("/api/generate/questions", response_model=QuestionGenerationResponse)
+async def generate_questions_endpoint(request: QuestionGenerationRequest):
+    """
+    生成智能题目
+    应用AI技术：文本生成（基于原始错题生成新题目）、提示词工程（结构化生成要求）
+    """
+    try:
+        # 验证参数
+        if request.quantity < 1 or request.quantity > 50:
+            raise HTTPException(status_code=400, detail="题目数量必须在1-50之间")
+        
+        if request.similarity_level not in ["仅改数字", "同类型变形", "混合知识点"]:
+            raise HTTPException(status_code=400, detail="相似度级别必须是：仅改数字、同类型变形、混合知识点")
+        
+        # 获取原始错题
+        mistake = data_manager.get_mistake_by_question_id(request.mistake_id)
+        if not mistake:
+            raise HTTPException(status_code=404, detail="原始错题不存在")
+        
+        # 调用AI引擎生成题目
+        result = ai_generate_questions(
+            source_mistake_id=mistake.get("question_id", request.mistake_id),
+            question_type=mistake.get("question_type"),
+            question_content=mistake.get("question_content"),
+            wrong_process=mistake.get("wrong_process"),
+            correct_answer=mistake.get("correct_answer"),
+            knowledge_points=mistake.get("knowledge_points", []),
+            difficulty_level=mistake.get("difficulty_level", "中等"),
+            similarity_level=request.similarity_level,
+            quantity=request.quantity,
+            target_difficulty=request.target_difficulty
+        )
+        
+        return {
+            "success": True,
+            "message": f"成功生成 {len(result.get('questions', []))} 道题目",
+            "questions": result.get("questions", []),
+            "generation_summary": result.get("generation_summary")
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # 运行服务器
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8003)

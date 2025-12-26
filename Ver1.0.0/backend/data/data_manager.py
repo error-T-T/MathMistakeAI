@@ -11,6 +11,7 @@ import uuid
 
 # 定义CSV文件路径
 MISTAKES_CSV = os.path.join(os.path.dirname(__file__), "mistakes.csv")
+GENERATED_QUESTIONS_CSV = os.path.join(os.path.dirname(__file__), "generated_questions.csv")
 
 # 定义模板字段
 TEMPLATE_FIELDS = [
@@ -32,6 +33,14 @@ def initialize_csv():
                 "id", "question_id", "question_type", "question_content", 
                 "wrong_process", "wrong_answer", "correct_answer", 
                 "knowledge_points", "difficulty_level"
+            ])
+            writer.writeheader()
+    
+    if not os.path.exists(GENERATED_QUESTIONS_CSV):
+        with open(GENERATED_QUESTIONS_CSV, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.DictWriter(file, fieldnames=[
+                "id", "source_mistake_id", "question_text", "solution", 
+                "similarity_level", "difficulty", "knowledge_points", "generated_at"
             ])
             writer.writeheader()
 
@@ -163,11 +172,22 @@ def get_all_mistakes() -> List[Dict]:
 
 def get_mistake_by_id(mistake_id: str) -> Optional[Dict]:
     """
-    根据ID获取错题数据
+    根据内部ID获取错题数据
     """
     mistakes = get_all_mistakes()
     for mistake in mistakes:
         if mistake["id"] == mistake_id:
+            return mistake
+    return None
+
+
+def get_mistake_by_question_id(question_id: str) -> Optional[Dict]:
+    """
+    根据题目ID（如 Q001）获取错题数据
+    """
+    mistakes = get_all_mistakes()
+    for mistake in mistakes:
+        if mistake.get("question_id") == question_id:
             return mistake
     return None
 
@@ -250,6 +270,194 @@ def clear_all_mistakes() -> int:
             "id", "question_id", "question_type", "question_content", 
             "wrong_process", "wrong_answer", "correct_answer", 
             "knowledge_points", "difficulty_level"
+        ])
+        writer.writeheader()
+    
+    return count
+
+
+def save_generated_question(generated_question: Dict) -> Dict:
+    """
+    保存生成的题目数据
+    应用AI技术：数据持久化（存储AI生成的题目结果）
+    参数:
+        generated_question: 生成的题目数据字典，应包含字段：
+            - source_mistake_id: 源错题ID
+            - question_text: 题目内容
+            - solution: 解答
+            - similarity_level: 相似度级别
+            - difficulty: 难度
+            - knowledge_points: 知识点列表
+    返回:
+        Dict: 保存的题目数据（包含生成的唯一ID和时间戳）
+    """
+    from datetime import datetime
+    
+    # 生成唯一ID
+    if "id" not in generated_question:
+        generated_question["id"] = str(uuid.uuid4())
+    
+    # 添加生成时间
+    generated_question["generated_at"] = datetime.now().isoformat()
+    
+    # 确保知识点是字符串格式
+    if isinstance(generated_question.get("knowledge_points"), list):
+        generated_question["knowledge_points"] = ",".join(generated_question["knowledge_points"])
+    
+    with open(GENERATED_QUESTIONS_CSV, mode='a', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=[
+            "id", "source_mistake_id", "question_text", "solution", 
+            "similarity_level", "difficulty", "knowledge_points", "generated_at"
+        ])
+        writer.writerow(generated_question)
+    
+    # 转换知识点标签回列表格式
+    if isinstance(generated_question["knowledge_points"], str):
+        generated_question["knowledge_points"] = [
+            tag.strip() for tag in generated_question["knowledge_points"].split(",")
+        ]
+    
+    return generated_question
+
+
+def save_generated_questions_batch(questions: List[Dict]) -> List[Dict]:
+    """
+    批量保存生成的题目数据
+    参数:
+        questions: 生成的题目数据列表
+    返回:
+        List[Dict: 保存的题目数据列表
+    """
+    saved_questions = []
+    for question in questions:
+        saved_question = save_generated_question(question)
+        saved_questions.append(saved_question)
+    return saved_questions
+
+
+def get_all_generated_questions() -> List[Dict]:
+    """
+    获取所有生成的题目数据
+    返回:
+        List[Dict]: 生成的题目列表
+    """
+    questions = []
+    
+    if not os.path.exists(GENERATED_QUESTIONS_CSV):
+        return questions
+    
+    with open(GENERATED_QUESTIONS_CSV, mode='r', newline='', encoding='utf-8') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            # 转换知识点标签为列表格式
+            if row.get("knowledge_points"):
+                row["knowledge_points"] = [tag.strip() for tag in row["knowledge_points"].split(",")]
+            questions.append(row)
+    
+    return questions
+
+
+def get_generated_questions_by_source_mistake_id(source_mistake_id: str) -> List[Dict]:
+    """
+    根据源错题ID获取生成的题目数据
+    参数:
+        source_mistake_id: 源错题ID
+    返回:
+        List[Dict]: 生成的题目列表
+    """
+    questions = get_all_generated_questions()
+    result = []
+    
+    for question in questions:
+        if question.get("source_mistake_id") == source_mistake_id:
+            result.append(question)
+    
+    return result
+
+
+def get_generated_questions_by_difficulty(difficulty: str) -> List[Dict]:
+    """
+    根据难度获取生成的题目数据
+    参数:
+        difficulty: 难度等级
+    返回:
+        List[Dict]: 生成的题目列表
+    """
+    questions = get_all_generated_questions()
+    result = []
+    
+    for question in questions:
+        if question.get("difficulty") == difficulty:
+            result.append(question)
+    
+    return result
+
+
+def get_generated_questions_by_similarity_level(similarity_level: str) -> List[Dict]:
+    """
+    根据相似度级别获取生成的题目数据
+    参数:
+        similarity_level: 相似度级别
+    返回:
+        List[Dict]: 生成的题目列表
+    """
+    questions = get_all_generated_questions()
+    result = []
+    
+    for question in questions:
+        if question.get("similarity_level") == similarity_level:
+            result.append(question)
+    
+    return result
+
+
+def delete_generated_question_by_id(question_id: str) -> bool:
+    """
+    根据ID删除生成的题目数据
+    参数:
+        question_id: 题目ID
+    返回:
+        bool: 是否删除成功
+    """
+    questions = get_all_generated_questions()
+    
+    # 查找并删除
+    updated_questions = [q for q in questions if q["id"] != question_id]
+    
+    # 如果数量没变，说明没找到
+    if len(updated_questions) == len(questions):
+        return False
+    
+    # 重新写入CSV
+    with open(GENERATED_QUESTIONS_CSV, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=[
+            "id", "source_mistake_id", "question_text", "solution", 
+            "similarity_level", "difficulty", "knowledge_points", "generated_at"
+        ])
+        writer.writeheader()
+        for question in updated_questions:
+            # 确保知识点是字符串格式
+            if isinstance(question["knowledge_points"], list):
+                question["knowledge_points"] = ",".join(question["knowledge_points"])
+            writer.writerow(question)
+    
+    return True
+
+
+def clear_all_generated_questions() -> int:
+    """
+    清空所有生成的题目数据
+    返回:
+        int: 删除的题目数量
+    """
+    questions = get_all_generated_questions()
+    count = len(questions)
+    
+    # 清空CSV文件
+    with open(GENERATED_QUESTIONS_CSV, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=[
+            "id", "source_mistake_id", "question_text", "solution", 
+            "similarity_level", "difficulty", "knowledge_points", "generated_at"
         ])
         writer.writeheader()
     

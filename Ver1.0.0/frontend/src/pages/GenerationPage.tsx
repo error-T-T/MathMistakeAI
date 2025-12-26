@@ -121,59 +121,39 @@ const GenerationPage: React.FC = () => {
     try {
       setIsGenerating(true);
 
-      // 准备生成参数（用于后续API调用）
-      void {
+      // 调用后端 API 生成题目
+      const response = await apiService.generateQuestions({
         similarity,
         quantity,
         difficulty,
         knowledge_points: selectedKnowledgePoints,
         base_mistake_id: selectedMistakeId
-      };
+      });
 
-      // 实际API调用示例：await apiService.generateQuestions({ similarity, quantity, difficulty, knowledge_points: selectedKnowledgePoints, base_mistake_id: selectedMistakeId });
-
-      // 模拟生成结果
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const mockGeneratedQuestions: GeneratedQuestion[] = Array.from({ length: quantity }, (_, i) => ({
-        id: `gen-${Date.now()}-${i}`,
-        source_mistake_id: selectedMistakeId,
-        question_text: generateMockQuestion(i),
-        answer: generateMockAnswer(i),
-        difficulty: difficulty,
-        knowledge_points: selectedKnowledgePoints,
-        similarity_level: similarity === 'only_numbers' ? '高' : similarity === 'same_type' ? '中' : '低'
-      }));
-      
-      setGeneratedQuestions(mockGeneratedQuestions);
-      setPreviewGenerated(true);
+      // 将后端返回的题目数据转换为前端使用的格式
+      if (response.success && response.questions) {
+        const formattedQuestions: GeneratedQuestion[] = response.questions.map((q: any, index: number) => ({
+          id: q.question_id || `gen-${Date.now()}-${index}`,
+          source_mistake_id: q.source_mistake_id || selectedMistakeId,
+          question_text: q.question_content,
+          answer: q.solution,
+          difficulty: q.difficulty,
+          knowledge_points: q.knowledge_points,
+          similarity_level: q.generation_method === '仅改数字' ? '高' : 
+                           q.generation_method === '同类型变形' ? '中' : '低'
+        }));
+        
+        setGeneratedQuestions(formattedQuestions);
+        setPreviewGenerated(true);
+      } else {
+        throw new Error(response.message || '生成失败');
+      }
     } catch (error) {
       console.error('生成题目失败:', error);
       alert('生成失败，请重试');
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  // 生成模拟题目
-  const generateMockQuestion = (index: number): string => {
-    const baseQuestions = [
-      '计算∫(0 to 1) x^3 dx',
-      '计算∫(0 to 2) x^2 dx',
-      '求函数 f(x) = x^2 - 2x + 1 的极值',
-      '求解方程 x^2 + 4x + 4 = 0',
-      '计算 lim(x→0) (sin x)/x',
-      '求导数 d/dx (x^3 + 2x^2)',
-      '计算∫(1 to 2) (2x + 1) dx',
-      '求函数 f(x) = x^4 - 4x^2 的极值点'
-    ];
-    return baseQuestions[index % baseQuestions.length];
-  };
-
-  // 生成模拟答案
-  const generateMockAnswer = (index: number): string => {
-    const answers = ['1/4', '8/3', '极小值 -1', 'x = -2', '1', '3x^2 + 4x', '4', 'x = ±√2'];
-    return answers[index % answers.length];
   };
 
   // 重置预览
